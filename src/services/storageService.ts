@@ -1,4 +1,6 @@
 import {
+  ACHIEVEMENT_CATALOG,
+  AchievementId,
   AppSettings,
   ChildProfile,
   DifficultyLevel,
@@ -39,6 +41,9 @@ export function createDefaultProfile(
     equippedOutfit: 'default',
     plantedGardenIds: [],
     totalSecondsLearned: 0,
+    equationsSolved: 0,
+    perfectScores: 0,
+    unlockedAchievements: [],
   };
 }
 
@@ -86,11 +91,20 @@ export function loadProfiles(): ChildProfile[] {
       return fallback;
     }
     const today = todayDateString();
-    return parsed.map((p) =>
-      p.lastActiveDate !== today
-        ? { ...p, dailyCompleted: 0, lastActiveDate: today }
-        : p
-    );
+    return parsed.map((p) => {
+      const normalized: ChildProfile = {
+        ...p,
+        dailyCompleted: p.lastActiveDate !== today ? 0 : p.dailyCompleted,
+        lastActiveDate: today,
+        equationsSolved: typeof p.equationsSolved === 'number' ? p.equationsSolved : 0,
+        perfectScores: typeof p.perfectScores === 'number' ? p.perfectScores : 0,
+        unlockedAchievements: Array.isArray(p.unlockedAchievements) ? p.unlockedAchievements : [],
+      };
+      return {
+        ...normalized,
+        unlockedAchievements: computeUnlockedAchievements(normalized),
+      };
+    });
   } catch {
     return [createDefaultProfile('Math Star', 'leo', 'easy')];
   }
@@ -153,6 +167,56 @@ export function computeUnlockedOutfits(totalStars: number, existing: OutfitId[])
   return Array.from(next);
 }
 
+export function getAchievementProgress(
+  profile: ChildProfile,
+  achievementId: AchievementId
+): { current: number; target: number } {
+  const def = ACHIEVEMENT_CATALOG.find((a) => a.id === achievementId);
+  const target = def?.target ?? 1;
+  const totalGames = Object.values(profile.completedGames).reduce(
+    (sum, n) => sum + (n || 0),
+    0
+  );
+  const uniqueGames = Object.values(profile.completedGames).filter(
+    (n) => (n || 0) > 0
+  ).length;
+
+  let current = 0;
+  switch (achievementId) {
+    case 'first_step':
+      current = totalGames;
+      break;
+    case 'perfect_score':
+    case 'perfect_streak_5':
+      current = profile.perfectScores;
+      break;
+    case 'equations_25':
+    case 'equations_100':
+      current = profile.equationsSolved;
+      break;
+    case 'math_explorer':
+    case 'master_explorer':
+      current = uniqueGames;
+      break;
+    case 'garden_keeper':
+      current = profile.plantedGardenIds.length;
+      break;
+  }
+
+  return { current: Math.min(current, target), target };
+}
+
+export function computeUnlockedAchievements(profile: ChildProfile): AchievementId[] {
+  const unlocked = new Set<AchievementId>(profile.unlockedAchievements || []);
+  ACHIEVEMENT_CATALOG.forEach((def) => {
+    const { current, target } = getAchievementProgress(profile, def.id);
+    if (current >= target) {
+      unlocked.add(def.id);
+    }
+  });
+  return Array.from(unlocked);
+}
+
 export function recordCompletedGame(
   profile: ChildProfile,
   gameId: GameModeId,
@@ -160,7 +224,11 @@ export function recordCompletedGame(
   wrongCount: number,
   starsEarned: number,
   durationSeconds: number
-): { updatedProfile: ChildProfile; newSession: GameSessionResult } {
+): {
+  updatedProfile: ChildProfile;
+  newSession: GameSessionResult;
+  newlyUnlockedAchievements: AchievementId[];
+} {
   const newStars = profile.stars + starsEarned;
   const today = todayDateString();
   const prevDaily = profile.lastActiveDate === today ? profile.dailyCompleted : 0;
@@ -168,8 +236,10 @@ export function recordCompletedGame(
     ...profile.completedGames,
     [gameId]: (profile.completedGames[gameId] || 0) + 1,
   };
+  const isPerfect = wrongCount === 0 && correctCount > 0;
+  const previousUnlocked = new Set(profile.unlockedAchievements || []);
 
-  const updatedProfile: ChildProfile = {
+  const draftProfile: ChildProfile = {
     ...profile,
     stars: newStars,
     dailyCompleted: prevDaily + 1,
@@ -177,6 +247,19 @@ export function recordCompletedGame(
     completedGames: updatedCompleted,
     unlockedOutfits: computeUnlockedOutfits(newStars, profile.unlockedOutfits),
     totalSecondsLearned: profile.totalSecondsLearned + durationSeconds,
+    equationsSolved: (profile.equationsSolved || 0) + correctCount,
+    perfectScores: (profile.perfectScores || 0) + (isPerfect ? 1 : 0),
+    unlockedAchievements: profile.unlockedAchievements || [],
+  };
+
+  const nextUnlocked = computeUnlockedAchievements(draftProfile);
+  const newlyUnlockedAchievements = nextUnlocked.filter(
+    (id) => !previousUnlocked.has(id)
+  );
+
+  const updatedProfile: ChildProfile = {
+    ...draftProfile,
+    unlockedAchievements: nextUnlocked,
   };
 
   const newSession: GameSessionResult = {
@@ -191,5 +274,5 @@ export function recordCompletedGame(
     timestamp: Date.now(),
   };
 
-  return { updatedProfile, newSession };
+  return { updatedProfile, newSession, newlyUnlockedAchievements };
 }

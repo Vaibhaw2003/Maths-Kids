@@ -35,6 +35,7 @@ export type ScreenRoute =
   | 'profiles'
   | 'home'
   | 'games'
+  | 'toybox3d'
   | 'play'
   | 'results'
   | 'rewards'
@@ -171,6 +172,110 @@ export const OUTFIT_CATALOG: OutfitItem[] = [
   { id: 'wizard', nameEn: 'Number Wizard Hat', nameHi: 'जादूगर टोपी', unlockStars: 50 },
 ];
 
+export type AchievementId =
+  | 'first_step'
+  | 'perfect_score'
+  | 'perfect_streak_5'
+  | 'equations_25'
+  | 'equations_100'
+  | 'math_explorer'
+  | 'master_explorer'
+  | 'garden_keeper';
+
+export interface AchievementDefinition {
+  id: AchievementId;
+  titleEn: string;
+  titleHi: string;
+  descriptionEn: string;
+  descriptionHi: string;
+  target: number;
+  color: string;
+  icon: 'award' | 'target' | 'flame' | 'calculator' | 'trophy' | 'compass' | 'sparkles' | 'flower';
+}
+
+export const ACHIEVEMENT_CATALOG: AchievementDefinition[] = [
+  {
+    id: 'first_step',
+    titleEn: 'First Steps',
+    titleHi: 'पहला कदम',
+    descriptionEn: 'Complete your very first math game.',
+    descriptionHi: 'अपना पहला गणित खेल पूरा करें।',
+    target: 1,
+    color: '#35D66F',
+    icon: 'award',
+  },
+  {
+    id: 'perfect_score',
+    titleEn: 'Perfect Score',
+    titleHi: 'शत-प्रतिशत अंक',
+    descriptionEn: 'Finish a round with zero retries.',
+    descriptionHi: 'बिना किसी गलती के एक राउंड पूरा करें।',
+    target: 1,
+    color: '#FFD83D',
+    icon: 'target',
+  },
+  {
+    id: 'equations_25',
+    titleEn: 'Number Builder',
+    titleHi: 'संख्या निर्माता',
+    descriptionEn: 'Solve 25 math questions correctly.',
+    descriptionHi: '25 गणित के सवाल सही हल करें।',
+    target: 25,
+    color: '#287BFF',
+    icon: 'calculator',
+  },
+  {
+    id: 'math_explorer',
+    titleEn: 'Math Explorer',
+    titleHi: 'गणित खोजकर्ता',
+    descriptionEn: 'Play 5 different math game modes.',
+    descriptionHi: '5 अलग-अलग गणित खेल आज़माएँ।',
+    target: 5,
+    color: '#9755F5',
+    icon: 'compass',
+  },
+  {
+    id: 'perfect_streak_5',
+    titleEn: 'Accuracy Ace',
+    titleHi: 'सटीकता चैंपियन',
+    descriptionEn: 'Earn 5 Perfect Score rounds.',
+    descriptionHi: '5 बार बिना गलती किए राउंड जीतें।',
+    target: 5,
+    color: '#FF55AE',
+    icon: 'flame',
+  },
+  {
+    id: 'garden_keeper',
+    titleEn: 'Garden Keeper',
+    titleHi: 'बगीचा रक्षक',
+    descriptionEn: 'Plant 3 items in your Reward Garden.',
+    descriptionHi: 'इनाम बगीचे में 3 पौधे या चीज़ें लगाएँ।',
+    target: 3,
+    color: '#35D66F',
+    icon: 'flower',
+  },
+  {
+    id: 'equations_100',
+    titleEn: '100 Equations Solved',
+    titleHi: '100 सवाल हल',
+    descriptionEn: 'Solve 100 math questions correctly!',
+    descriptionHi: '100 गणित के सवाल सही हल करें!',
+    target: 100,
+    color: '#FF963C',
+    icon: 'trophy',
+  },
+  {
+    id: 'master_explorer',
+    titleEn: 'All-Star Explorer',
+    titleHi: 'ऑल-स्टार खोजकर्ता',
+    descriptionEn: 'Play 12 different math game modes.',
+    descriptionHi: '12 अलग-अलग गणित खेल पूरे करें।',
+    target: 12,
+    color: '#287BFF',
+    icon: 'sparkles',
+  },
+];
+
 export interface ChildProfile {
   id: string;
   nickname: string;
@@ -187,6 +292,9 @@ export interface ChildProfile {
   equippedOutfit: OutfitId;
   plantedGardenIds: string[];
   totalSecondsLearned: number;
+  equationsSolved: number;
+  perfectScores: number;
+  unlockedAchievements: AchievementId[];
 }
 
 export interface GameSessionResult {

@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
+  Box,
   Flower2,
   Globe,
   Lock,
@@ -11,6 +12,7 @@ import {
   VolumeX,
 } from 'lucide-react';
 import {
+  AchievementId,
   AppSettings,
   ChildProfile,
   DifficultyLevel,
@@ -25,6 +27,8 @@ import {
 import { getDifficultyLabel, getTranslations } from './core/localization';
 import { audioService } from './services/audioService';
 import {
+  computeUnlockedAchievements,
+  computeUnlockedOutfits,
   createDefaultProfile,
   loadActiveProfileId,
   loadHistory,
@@ -44,6 +48,7 @@ import { ResultsView } from './components/ResultsView';
 import { RewardGardenView } from './components/RewardGardenView';
 import { ProfileManagerView } from './components/ProfileManagerView';
 import { ParentDashboardView } from './components/ParentDashboardView';
+import { Math3DToyboxView } from './components/Math3DToyboxView';
 
 export default function App() {
   const [settings, setSettings] = useState<AppSettings>(() => loadSettings());
@@ -54,12 +59,16 @@ export default function App() {
   const [history, setHistory] = useState<GameSessionResult[]>(() => loadHistory());
 
   const [route, setRoute] = useState<ScreenRoute>('welcome');
+  const [rewardsInitialTab, setRewardsInitialTab] = useState<
+    'garden' | 'achievements' | 'stickers' | 'outfits'
+  >('garden');
   const [activeGameId, setActiveGameId] = useState<GameModeId>('count_objects');
   const [lastResult, setLastResult] = useState<{
     gameId: GameModeId;
     correctCount: number;
     wrongCount: number;
     starsEarned: number;
+    newlyUnlockedAchievements: AchievementId[];
   } | null>(null);
 
   const activeProfile = useMemo(
@@ -107,7 +116,7 @@ export default function App() {
     starsEarned: number;
     durationSeconds: number;
   }) => {
-    const { updatedProfile, newSession } = recordCompletedGame(
+    const { updatedProfile, newSession, newlyUnlockedAchievements } = recordCompletedGame(
       activeProfile,
       res.gameId,
       res.correctCount,
@@ -122,6 +131,7 @@ export default function App() {
       correctCount: res.correctCount,
       wrongCount: res.wrongCount,
       starsEarned: res.starsEarned,
+      newlyUnlockedAchievements,
     });
     setRoute('results');
   };
@@ -153,10 +163,14 @@ export default function App() {
     if (spendable < cost || activeProfile.plantedGardenIds.includes(itemId)) {
       return;
     }
-    updateActiveProfile({
+    const nextDraft: ChildProfile = {
       ...activeProfile,
       spentStars: activeProfile.spentStars + cost,
       plantedGardenIds: [...activeProfile.plantedGardenIds, itemId],
+    };
+    updateActiveProfile({
+      ...nextDraft,
+      unlockedAchievements: computeUnlockedAchievements(nextDraft),
     });
   };
 
@@ -178,6 +192,9 @@ export default function App() {
       equippedOutfit: 'default',
       plantedGardenIds: [],
       totalSecondsLearned: 0,
+      equationsSolved: 0,
+      perfectScores: 0,
+      unlockedAchievements: [],
     });
     setHistory((prev) => prev.filter((h) => h.profileId !== activeProfile.id));
   };
@@ -238,6 +255,19 @@ export default function App() {
               type="button"
               onClick={() => {
                 audioService.playClick();
+                setRoute('toybox3d');
+              }}
+              className={`hover:text-[#287BFF] transition-colors whitespace-nowrap shrink-0 ${
+                route === 'toybox3d' ? 'text-[#287BFF]' : ''
+              }`}
+            >
+              {t.navToybox3D}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                audioService.playClick();
+                setRewardsInitialTab('garden');
                 setRoute('rewards');
               }}
               className={`hover:text-[#287BFF] transition-colors whitespace-nowrap shrink-0 ${
@@ -278,12 +308,13 @@ export default function App() {
       </header>
 
       {/* Mobile Bottom Compact Bar (kept minimal and under 15% viewport height) */}
-      {route !== 'play' && (
+      {route !== 'play' && route !== 'toybox3d' && (
         <nav className="md:hidden fixed bottom-0 inset-x-0 z-30 bg-white border-t border-slate-200 px-2 py-1.5 flex items-center justify-around">
           {(
             [
               { id: 'home', label: t.navHome },
               { id: 'games', label: t.navGames },
+              { id: 'toybox3d', label: t.navToybox3D },
               { id: 'rewards', label: t.navRewards },
               { id: 'profiles', label: t.navProfiles },
             ] as Array<{ id: ScreenRoute; label: string }>
@@ -295,7 +326,7 @@ export default function App() {
                 audioService.playClick();
                 setRoute(item.id);
               }}
-              className={`px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap shrink-0 ${
+              className={`px-2.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap shrink-0 ${
                 route === item.id
                   ? 'bg-[#EEF5FF] text-[#287BFF]'
                   : 'text-slate-600'
@@ -339,6 +370,18 @@ export default function App() {
                     >
                       <Play className="w-5 h-5 fill-current" />
                       <span>{t.playNow}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        audioService.playClick();
+                        setRoute('toybox3d');
+                      }}
+                      className="inline-flex items-center gap-2 px-5 py-4 rounded-2xl bg-[#9755F5] hover:bg-purple-600 text-white font-bold transition-colors whitespace-nowrap shrink-0"
+                    >
+                      <Box className="w-5 h-5" />
+                      <span>{t.launchToybox3D}</span>
                     </button>
 
                     <button
@@ -472,6 +515,17 @@ export default function App() {
                     type="button"
                     onClick={() => {
                       audioService.playClick();
+                      setRoute('toybox3d');
+                    }}
+                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#F4EEFF] hover:bg-purple-100 text-[#7C3AED] text-sm font-bold transition-colors whitespace-nowrap shrink-0"
+                  >
+                    <Box className="w-4 h-4 text-[#9755F5]" />
+                    <span>{t.launchToybox3D}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      audioService.playClick();
                       setRoute('rewards');
                     }}
                     className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#ECFFF2] hover:bg-emerald-100 text-emerald-800 text-sm font-bold transition-colors whitespace-nowrap shrink-0"
@@ -545,6 +599,30 @@ export default function App() {
           </div>
         )}
 
+        {/* 3D MATH TOYBOX STUDIO */}
+        {route === 'toybox3d' && (
+          <Math3DToyboxView
+            profile={activeProfile}
+            lang={settings.language}
+            onBack={() => setRoute('home')}
+            onEarnStars={(stars) => {
+              const nextStars = activeProfile.stars + stars;
+              const nextDraft: ChildProfile = {
+                ...activeProfile,
+                stars: nextStars,
+                unlockedOutfits: computeUnlockedOutfits(
+                  nextStars,
+                  activeProfile.unlockedOutfits
+                ),
+              };
+              updateActiveProfile({
+                ...nextDraft,
+                unlockedAchievements: computeUnlockedAchievements(nextDraft),
+              });
+            }}
+          />
+        )}
+
         {/* ACTIVE GAMEPLAY SCREEN */}
         {route === 'play' && (
           <GameStage
@@ -564,6 +642,7 @@ export default function App() {
             correctCount={lastResult.correctCount}
             wrongCount={lastResult.wrongCount}
             starsEarned={lastResult.starsEarned}
+            newlyUnlockedAchievements={lastResult.newlyUnlockedAchievements}
             profile={activeProfile}
             lang={settings.language}
             onPlayAgain={() => setRoute('play')}
@@ -572,14 +651,20 @@ export default function App() {
               setRoute('play');
             }}
             onHome={() => setRoute('home')}
+            onViewAchievements={() => {
+              setRewardsInitialTab('achievements');
+              setRoute('rewards');
+            }}
           />
         )}
 
         {/* REWARD GARDEN, STICKERS & OUTFITS */}
         {route === 'rewards' && (
           <RewardGardenView
+            key={rewardsInitialTab}
             profile={activeProfile}
             lang={settings.language}
+            initialTab={rewardsInitialTab}
             onPlantGardenItem={handlePlantGardenItem}
             onEquipOutfit={handleEquipOutfit}
           />

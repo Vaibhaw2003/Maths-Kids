@@ -33,6 +33,8 @@ export interface TranslationStrings {
   mascotCocoRole: string;
   navHome: string;
   navGames: string;
+  navToybox3D: string;
+  launchToybox3D: string;
   navRewards: string;
   navProfiles: string;
   dailyGoalTitle: string;
@@ -71,6 +73,14 @@ export interface TranslationStrings {
   gardenTab: string;
   stickersTab: string;
   outfitsTab: string;
+  achievementsTab: string;
+  achievementUnlocked: string;
+  achievementInProgress: string;
+  achievementsSummary: string;
+  newBadgeUnlocked: string;
+  badgePopupHeading: string;
+  badgePopupDismiss: string;
+  viewAchievementsBtn: string;
   plantItem: string;
   planted: string;
   needMoreStars: string;
@@ -145,6 +155,8 @@ const EN: TranslationStrings = {
   mascotCocoRole: 'Speedy Math Racer',
   navHome: 'Home',
   navGames: 'All Games',
+  navToybox3D: '3D Models',
+  launchToybox3D: 'Explore 3D Models',
   navRewards: 'Reward Garden',
   navProfiles: 'Profiles',
   dailyGoalTitle: 'Daily Learning Goal',
@@ -193,6 +205,14 @@ const EN: TranslationStrings = {
   gardenTab: 'Reward Garden',
   stickersTab: 'Sticker Book',
   outfitsTab: 'Mascot Outfits',
+  achievementsTab: 'Achievements',
+  achievementUnlocked: 'Unlocked',
+  achievementInProgress: 'In Progress',
+  achievementsSummary: 'Badges Earned',
+  newBadgeUnlocked: 'New Badge Unlocked!',
+  badgePopupHeading: 'Badge Unlocked!',
+  badgePopupDismiss: 'Awesome!',
+  viewAchievementsBtn: 'View Achievements',
   plantItem: 'Plant',
   planted: 'Planted!',
   needMoreStars: 'Earn more stars',
@@ -304,6 +324,8 @@ const HI: TranslationStrings = {
   mascotCocoRole: 'तेज़ गणित रेसर',
   navHome: 'होम',
   navGames: 'सभी खेल',
+  navToybox3D: '3D मॉडल',
+  launchToybox3D: '3D मॉडल देखें',
   navRewards: 'इनाम बगीचा',
   navProfiles: 'प्रोफ़ाइल',
   dailyGoalTitle: 'आज का लक्ष्य',
@@ -352,6 +374,14 @@ const HI: TranslationStrings = {
   gardenTab: 'इनाम बगीचा',
   stickersTab: 'स्टिकर किताब',
   outfitsTab: 'साथी के कपड़े',
+  achievementsTab: 'उपलब्धियाँ',
+  achievementUnlocked: 'अनलॉक हो गया',
+  achievementInProgress: 'प्रगति पर',
+  achievementsSummary: 'मिले बैज',
+  newBadgeUnlocked: 'नया बैज मिला!',
+  badgePopupHeading: 'नया बैज अनलॉक हुआ!',
+  badgePopupDismiss: 'बहुत बढ़िया!',
+  viewAchievementsBtn: 'सभी बैज देखें',
   plantItem: 'लगाएँ',
   planted: 'लगा दिया!',
   needMoreStars: 'और सितारे जीतें',
