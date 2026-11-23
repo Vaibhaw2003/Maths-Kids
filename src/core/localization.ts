@@ -3,7 +3,9 @@ import { GameCategory, GameModeId, LanguageCode, DifficultyLevel, FutureLanguage
 export interface TranslationStrings {
   appName: string;
   appSubtitle: string;
+  editionBadge: string;
   playNow: string;
+  continueLearning: string;
   switchProfile: string;
   parentZone: string;
   languageLabel: string;
@@ -32,16 +34,61 @@ export interface TranslationStrings {
   mascotCoco: string;
   mascotCocoRole: string;
   navHome: string;
+  navWorlds: string;
   navGames: string;
   navToybox3D: string;
   launchToybox3D: string;
   navRewards: string;
+  navShop: string;
+  navDaily: string;
+  navProfile: string;
   navProfiles: string;
   dailyGoalTitle: string;
+  streakLabel: string;
   starsEarned: string;
+  coinsLabel: string;
+  xpLabel: string;
+  playerLevelLabel: string;
   activitiesDone: string;
   featuredTitle: string;
   allGamesTitle: string;
+  worldsTitle: string;
+  worldsSubtitle: string;
+  exploreWorld: string;
+  worldLocked: string;
+  levelsCompleted: string;
+  levelMapTitle: string;
+  tierEasy: string;
+  tierMedium: string;
+  tierHard: string;
+  startLevel: string;
+  replayLevel: string;
+  currentLevelBadge: string;
+  shopTitle: string;
+  shopSubtitle: string;
+  buyItem: string;
+  ownedItem: string;
+  equipItem: string;
+  equippedItem: string;
+  notEnoughCoins: string;
+  dailyChallengeTitle: string;
+  dailyChallengeSubtitle: string;
+  startDailyChallenge: string;
+  dailyCompletedToday: string;
+  dailyMissionsTitle: string;
+  claimReward: string;
+  claimedLabel: string;
+  trophyRoomTitle: string;
+  trophyRoomSubtitle: string;
+  trophiesTab: string;
+  charactersTab: string;
+  profileTitle: string;
+  profileSubtitle: string;
+  pauseTitle: string;
+  resumeGame: string;
+  restartGame: string;
+  exitToMap: string;
+  hintButton: string;
   categoryAll: string;
   categoryCounting: string;
   categoryAddition: string;
@@ -65,6 +112,9 @@ export interface TranslationStrings {
   correctLabel: string;
   wrongLabel: string;
   starsLabel: string;
+  accuracyLabel: string;
+  nextLevel: string;
+  returnToMap: string;
   playAgain: string;
   nextGame: string;
   backHome: string;
@@ -98,6 +148,7 @@ export interface TranslationStrings {
   statTimeSpent: string;
   statGamesPlayed: string;
   statTotalStars: string;
+  topicBreakdownTitle: string;
   gameHistoryTitle: string;
   noHistoryYet: string;
   difficultyControlsTitle: string;
@@ -106,6 +157,8 @@ export interface TranslationStrings {
   audioSettingsTitle: string;
   soundEffects: string;
   backgroundMusic: string;
+  soundVolumeLabel: string;
+  musicVolumeLabel: string;
   voiceInstructions: string;
   practiceTimer: string;
   futureLanguagesTitle: string;
@@ -123,14 +176,16 @@ export interface TranslationStrings {
 
 const EN: TranslationStrings = {
   appName: 'VS Math Kids',
-  appSubtitle: 'Fun Learning Games for Ages 3–8',
-  playNow: 'Play Games',
+  appSubtitle: '3D Cartoon Adventure Math Game for Ages 3–8',
+  editionBadge: 'Adventure Gaming Edition',
+  playNow: 'Play Now',
+  continueLearning: 'Continue Learning',
   switchProfile: 'Child Profiles',
   parentZone: 'Parent Zone',
   languageLabel: 'Language',
-  welcomeGreeting: 'Learn Numbers with Joy!',
+  welcomeGreeting: 'Math Adventure Awaits!',
   welcomeDescription:
-    'Count, add, subtract, race cars, and grow your own flower garden with Leo the Lion, Bella the Bunny, and Coco the Duck.',
+    'Explore 6 colorful 3D islands, conquer 600 levels, collect coins & stars, and play interactive 3D math games with Leo, Bella, and Coco.',
   chooseHero: 'Choose Who Is Playing',
   createProfile: 'Add Child Profile',
   editProfile: 'Edit Profile',
@@ -154,16 +209,61 @@ const EN: TranslationStrings = {
   mascotCoco: 'Coco the Duck',
   mascotCocoRole: 'Speedy Math Racer',
   navHome: 'Home',
-  navGames: 'All Games',
-  navToybox3D: '3D Models',
-  launchToybox3D: 'Explore 3D Models',
-  navRewards: 'Reward Garden',
+  navWorlds: 'Worlds',
+  navGames: 'Games',
+  navToybox3D: '3D Toybox',
+  launchToybox3D: '3D Toybox',
+  navRewards: 'Rewards',
+  navShop: 'Shop',
+  navDaily: 'Daily',
+  navProfile: 'Profile',
   navProfiles: 'Profiles',
   dailyGoalTitle: 'Daily Learning Goal',
-  starsEarned: 'Total Stars',
+  streakLabel: 'Day Streak',
+  starsEarned: 'Stars',
+  coinsLabel: 'Coins',
+  xpLabel: 'XP',
+  playerLevelLabel: 'Level',
   activitiesDone: 'Games Finished',
-  featuredTitle: 'Ready to Play',
-  allGamesTitle: 'Choose a Math Game',
+  featuredTitle: 'Adventure Quests',
+  allGamesTitle: 'Arcade & Mini-Games',
+  worldsTitle: '3D Adventure Worlds',
+  worldsSubtitle: 'Tap any island on the 3D map or below to start its 100-level math quest!',
+  exploreWorld: 'Enter World',
+  worldLocked: 'Locked',
+  levelsCompleted: 'Levels Cleared',
+  levelMapTitle: 'Select Level',
+  tierEasy: 'Easy (1–33)',
+  tierMedium: 'Medium (34–66)',
+  tierHard: 'Hard (67–100)',
+  startLevel: 'Play Level',
+  replayLevel: 'Replay Level',
+  currentLevelBadge: 'Current',
+  shopTitle: 'Adventure Gear Shop',
+  shopSubtitle: 'Spend earned coins on neon outfits, 3D robot & car skins, and backgrounds!',
+  buyItem: 'Buy',
+  ownedItem: 'Owned',
+  equipItem: 'Equip',
+  equippedItem: 'Equipped',
+  notEnoughCoins: 'Need more coins',
+  dailyChallengeTitle: 'Daily 10-Question Challenge',
+  dailyChallengeSubtitle: 'Beat today’s 10-question sprint to earn bonus coins, XP, and keep your streak!',
+  startDailyChallenge: 'Start Daily Challenge',
+  dailyCompletedToday: 'Completed Today',
+  dailyMissionsTitle: 'Daily Missions',
+  claimReward: 'Claim',
+  claimedLabel: 'Claimed',
+  trophyRoomTitle: 'Trophy Room & Rewards',
+  trophyRoomSubtitle: 'Celebrate trophies, achievement badges, stickers, characters, and your garden!',
+  trophiesTab: 'Trophies',
+  charactersTab: 'Characters',
+  profileTitle: 'Player Profile & Gear',
+  profileSubtitle: 'Customize your hero, inspect stats, switch profiles, or open Parent Controls.',
+  pauseTitle: 'Adventure Paused',
+  resumeGame: 'Resume Quest',
+  restartGame: 'Restart Round',
+  exitToMap: 'Exit Adventure',
+  hintButton: 'Hint',
   categoryAll: 'All Games',
   categoryCounting: 'Counting',
   categoryAddition: 'Addition',
@@ -192,27 +292,30 @@ const EN: TranslationStrings = {
     'Almost there! Count one more time!',
     'Good try! Let us look closely together!',
   ],
-  resultsTitle: "You're a Math Star!",
-  resultsSubtitle: 'Look how many answers you solved today!',
+  resultsTitle: 'Victory!',
+  resultsSubtitle: 'Awesome math adventure! Look at your rewards!',
   correctLabel: 'Correct',
   wrongLabel: 'Retries',
-  starsLabel: 'Stars Earned',
+  starsLabel: 'Stars',
+  accuracyLabel: 'Accuracy',
+  nextLevel: 'Next Level',
+  returnToMap: 'World Map',
   playAgain: 'Play Again',
   nextGame: 'Next Game',
   backHome: 'Back to Home',
-  rewardsTitle: 'My Reward Garden & Stickers',
-  rewardsSubtitle: 'Spend earned stars to plant your meadow and dress up your mascot!',
-  gardenTab: 'Reward Garden',
-  stickersTab: 'Sticker Book',
-  outfitsTab: 'Mascot Outfits',
-  achievementsTab: 'Achievements',
+  rewardsTitle: 'Trophy Room & Reward Garden',
+  rewardsSubtitle: 'Collect trophies, earn badges, plant your garden, and unlock characters!',
+  gardenTab: 'Garden',
+  stickersTab: 'Stickers',
+  outfitsTab: 'Outfits',
+  achievementsTab: 'Badges',
   achievementUnlocked: 'Unlocked',
   achievementInProgress: 'In Progress',
   achievementsSummary: 'Badges Earned',
   newBadgeUnlocked: 'New Badge Unlocked!',
   badgePopupHeading: 'Badge Unlocked!',
   badgePopupDismiss: 'Awesome!',
-  viewAchievementsBtn: 'View Achievements',
+  viewAchievementsBtn: 'View Trophy Room',
   plantItem: 'Plant',
   planted: 'Planted!',
   needMoreStars: 'Earn more stars',
@@ -221,29 +324,32 @@ const EN: TranslationStrings = {
   equipped: 'Wearing',
   lockedUntil: 'Unlocks at',
   parentGateTitle: 'Parent Verification',
-  parentGatePrompt: 'Please solve this grown-up check to enter the Parent Zone:',
+  parentGatePrompt: 'Solve this quick grown-up check to unlock Parent Controls:',
   parentGateVerify: 'Enter Parent Zone',
   parentGateWrong: 'Not quite! Please try again.',
-  parentDashboardTitle: 'Parent Dashboard',
-  parentSubtitle: 'Track learning accuracy, play history, and safety settings offline.',
+  parentDashboardTitle: 'Parent Analytics & Controls',
+  parentSubtitle: 'Monitor topic mastery, learning time, difficulty range, and audio levels offline.',
   statAccuracy: 'Overall Accuracy',
   statTimeSpent: 'Time Learning',
   statGamesPlayed: 'Sessions Completed',
   statTotalStars: 'Total Stars Collected',
+  topicBreakdownTitle: 'Topic Mastery Breakdown',
   gameHistoryTitle: 'Recent Learning History',
   noHistoryYet: 'No games completed for this profile yet. Start a game to see progress!',
   difficultyControlsTitle: 'Difficulty & Number Range',
   customMaxRangeLabel: 'Maximum Number Range',
   usePresetRange: 'Use Level Preset',
-  audioSettingsTitle: 'Audio & Accessibility',
+  audioSettingsTitle: 'Audio & Volume Controls',
   soundEffects: 'Cheerful Sound Effects',
-  backgroundMusic: 'Soft Playroom Melody',
+  backgroundMusic: 'Playroom Adventure Music',
+  soundVolumeLabel: 'SFX Volume',
+  musicVolumeLabel: 'Music Volume',
   voiceInstructions: 'Spoken Voice Prompts',
   practiceTimer: 'Optional Practice Timer',
   futureLanguagesTitle: 'Localization Architecture',
   privacyNoteTitle: 'Child Safety & Offline Privacy',
   privacyNoteBody:
-    '100% offline-first. No ads, no external links for children, no accounts required, and all progress stays privately on this device.',
+    '100% offline-first. No ads, no real-money purchases, no external links for children, and all data stays safely on this device.',
   resetProgress: 'Reset Profile Progress',
   confirmReset: 'Tap Again to Confirm Reset',
   minutesShort: 'm',
@@ -292,14 +398,16 @@ const EN: TranslationStrings = {
 
 const HI: TranslationStrings = {
   appName: 'VS मैथ किड्स',
-  appSubtitle: '3–8 साल के बच्चों के लिए मज़ेदार गणित खेल',
-  playNow: 'खेल शुरू करें',
+  appSubtitle: '3–8 साल के बच्चों के लिए 3D गणित एडवेंचर गेम',
+  editionBadge: 'एडवेंचर गेमिंग संस्करण',
+  playNow: 'अभी खेलें',
+  continueLearning: 'आगे खेलें',
   switchProfile: 'बच्चों की प्रोफ़ाइल',
   parentZone: 'पैरेंट ज़ोन',
   languageLabel: 'भाषा',
-  welcomeGreeting: 'खेल-खेल में गणित सीखें!',
+  welcomeGreeting: 'गणित का रोमांच शुरू!',
   welcomeDescription:
-    'लियो शेर, बेला खरगोश और कोको बत्तख के साथ गिनती, जोड़, घटाव, कार रेसिंग और अपना बगीचा बनाएँ।',
+    '6 रंगीन 3D द्वीपों की सैर करें, 600 स्तर जीतें, सिक्के व सितारे कमाएँ और लियो, बेला व कोको के साथ सीखें।',
   chooseHero: 'खिलाड़ी चुनें',
   createProfile: 'नई प्रोफ़ाइल जोड़ें',
   editProfile: 'प्रोफ़ाइल बदलें',
@@ -323,16 +431,61 @@ const HI: TranslationStrings = {
   mascotCoco: 'कोको बत्तख',
   mascotCocoRole: 'तेज़ गणित रेसर',
   navHome: 'होम',
-  navGames: 'सभी खेल',
-  navToybox3D: '3D मॉडल',
-  launchToybox3D: '3D मॉडल देखें',
-  navRewards: 'इनाम बगीचा',
+  navWorlds: 'दुनिया',
+  navGames: 'खेल',
+  navToybox3D: '3D खिलौने',
+  launchToybox3D: '3D खिलौने',
+  navRewards: 'इनाम',
+  navShop: 'दुकान',
+  navDaily: 'दैनिक',
+  navProfile: 'प्रोफ़ाइल',
   navProfiles: 'प्रोफ़ाइल',
   dailyGoalTitle: 'आज का लक्ष्य',
-  starsEarned: 'कुल सितारे',
+  streakLabel: 'दिन स्ट्रीक',
+  starsEarned: 'सितारे',
+  coinsLabel: 'सिक्के',
+  xpLabel: 'XP',
+  playerLevelLabel: 'स्तर',
   activitiesDone: 'पूरे किए खेल',
-  featuredTitle: 'खेलने के लिए तैयार',
-  allGamesTitle: 'गणित का खेल चुनें',
+  featuredTitle: 'रोमांचक मिशन',
+  allGamesTitle: 'आर्केड और मिनी-गेम',
+  worldsTitle: '3D एडवेंचर दुनिया',
+  worldsSubtitle: '3D नक्शे पर किसी भी द्वीप को चुनें और 100 स्तरों की यात्रा शुरू करें!',
+  exploreWorld: 'दुनिया में जाएँ',
+  worldLocked: 'बंद है',
+  levelsCompleted: 'जीते स्तर',
+  levelMapTitle: 'स्तर चुनें',
+  tierEasy: 'आसान (1–33)',
+  tierMedium: 'मध्यम (34–66)',
+  tierHard: 'कठिन (67–100)',
+  startLevel: 'स्तर खेलें',
+  replayLevel: 'फिर से खेलें',
+  currentLevelBadge: 'वर्तमान',
+  shopTitle: 'एडवेंचर गियर दुकान',
+  shopSubtitle: 'जीते हुए सिक्कों से पोशाक, 3D रोबोट व कार स्किन और थीम खरीदें!',
+  buyItem: 'खरीदें',
+  ownedItem: 'खरीदा गया',
+  equipItem: 'लगाएँ',
+  equippedItem: 'सक्रिय',
+  notEnoughCoins: 'और सिक्के कमाएँ',
+  dailyChallengeTitle: 'दैनिक 10-सवाल चुनौती',
+  dailyChallengeSubtitle: 'बोनस सिक्के, XP और अपनी स्ट्रीक बचाने के लिए आज के 10 सवाल जीतें!',
+  startDailyChallenge: 'चुनौती शुरू करें',
+  dailyCompletedToday: 'आज पूरा हो गया',
+  dailyMissionsTitle: 'दैनिक मिशन',
+  claimReward: 'प्राप्त करें',
+  claimedLabel: 'मिला',
+  trophyRoomTitle: 'ट्रॉफी रूम और इनाम',
+  trophyRoomSubtitle: 'अपनी ट्रॉफियाँ, बैज, स्टिकर, किरदार और बगीचा देखें!',
+  trophiesTab: 'ट्रॉफी',
+  charactersTab: 'किरदार',
+  profileTitle: 'खिलाड़ी प्रोफ़ाइल',
+  profileSubtitle: 'अपना साथी सजाएँ, आँकड़े देखें या पैरेंट ज़ोन खोलें।',
+  pauseTitle: 'खेल रोका गया',
+  resumeGame: 'वापस खेलें',
+  restartGame: 'फिर शुरू करें',
+  exitToMap: 'बाहर निकलें',
+  hintButton: 'संकेत',
   categoryAll: 'सभी खेल',
   categoryCounting: 'गिनती',
   categoryAddition: 'जोड़',
@@ -361,27 +514,30 @@ const HI: TranslationStrings = {
     'लगभग सही! एक बार फिर गिनें!',
     'अच्छा प्रयास! साथ मिलकर देखते हैं!',
   ],
-  resultsTitle: 'तुम एक मैथ स्टार हो!',
-  resultsSubtitle: 'देखो आज आपने कितने सवाल हल किए!',
+  resultsTitle: 'शानदार जीत!',
+  resultsSubtitle: 'कमाल का गणित रोमांच! आपके इनाम यहाँ हैं!',
   correctLabel: 'सही',
   wrongLabel: 'कोशिशें',
-  starsLabel: 'मिले सितारे',
+  starsLabel: 'सितारे',
+  accuracyLabel: 'सटीकता',
+  nextLevel: 'अगला स्तर',
+  returnToMap: 'दुनिया नक्शा',
   playAgain: 'फिर से खेलें',
   nextGame: 'अगला खेल',
   backHome: 'होम पर जाएँ',
-  rewardsTitle: 'मेरा इनाम बगीचा और स्टिकर',
-  rewardsSubtitle: 'सितारों से बगीचे में पौधे लगाएँ और अपने साथी को सजाएँ!',
-  gardenTab: 'इनाम बगीचा',
-  stickersTab: 'स्टिकर किताब',
-  outfitsTab: 'साथी के कपड़े',
-  achievementsTab: 'उपलब्धियाँ',
+  rewardsTitle: 'ट्रॉफी रूम और बगीचा',
+  rewardsSubtitle: 'ट्रॉफी, बैज, पौधे और किरदार अनलॉक करें!',
+  gardenTab: 'बगीचा',
+  stickersTab: 'स्टिकर',
+  outfitsTab: 'कपड़े',
+  achievementsTab: 'बैज',
   achievementUnlocked: 'अनलॉक हो गया',
   achievementInProgress: 'प्रगति पर',
   achievementsSummary: 'मिले बैज',
   newBadgeUnlocked: 'नया बैज मिला!',
   badgePopupHeading: 'नया बैज अनलॉक हुआ!',
   badgePopupDismiss: 'बहुत बढ़िया!',
-  viewAchievementsBtn: 'सभी बैज देखें',
+  viewAchievementsBtn: 'ट्रॉफी रूम देखें',
   plantItem: 'लगाएँ',
   planted: 'लगा दिया!',
   needMoreStars: 'और सितारे जीतें',
@@ -393,26 +549,29 @@ const HI: TranslationStrings = {
   parentGatePrompt: 'पैरेंट ज़ोन खोलने के लिए यह सवाल हल करें:',
   parentGateVerify: 'पैरेंट ज़ोन खोलें',
   parentGateWrong: 'सही नहीं है! फिर से प्रयास करें।',
-  parentDashboardTitle: 'पैरेंट डैशबोर्ड',
-  parentSubtitle: 'बच्चों की प्रगति, सटीकता और ऑफ़लाइन सुरक्षा सेटिंग्स देखें।',
+  parentDashboardTitle: 'पैरेंट एनालिटिक्स और नियंत्रण',
+  parentSubtitle: 'विषय-वार सटीकता, समय, कठिनाई और आवाज़ की सेटिंग्स देखें।',
   statAccuracy: 'कुल सटीकता',
   statTimeSpent: 'सीखने का समय',
   statGamesPlayed: 'पूरे किए सत्र',
   statTotalStars: 'कुल इकट्ठे सितारे',
+  topicBreakdownTitle: 'विषय-वार प्रगति',
   gameHistoryTitle: 'हाल के खेल का रिकॉर्ड',
   noHistoryYet: 'इस प्रोफ़ाइल के लिए अभी कोई खेल नहीं खेला गया है।',
   difficultyControlsTitle: 'कठिनाई और संख्या सीमा',
   customMaxRangeLabel: 'अधिकतम संख्या सीमा',
   usePresetRange: 'स्तर के अनुसार रखें',
-  audioSettingsTitle: 'आवाज़ और सुविधा',
+  audioSettingsTitle: 'आवाज़ और वॉल्यूम नियंत्रण',
   soundEffects: 'मज़ेदार ध्वनि प्रभाव',
-  backgroundMusic: 'हल्का बैकग्राउंड संगीत',
+  backgroundMusic: 'बैकग्राउंड एडवेंचर संगीत',
+  soundVolumeLabel: 'ध्वनि वॉल्यूम',
+  musicVolumeLabel: 'संगीत वॉल्यूम',
   voiceInstructions: 'बोलकर निर्देश',
   practiceTimer: 'वैकल्पिक अभ्यास टाइमर',
   futureLanguagesTitle: 'भाषा विस्तार प्रणाली',
   privacyNoteTitle: 'बाल सुरक्षा और ऑफ़लाइन गोपनीयता',
   privacyNoteBody:
-    'पूरी तरह ऑफ़लाइन। कोई विज्ञापन नहीं, बच्चों के लिए कोई बाहरी लिंक नहीं, और सारा डेटा आपके डिवाइस पर सुरक्षित रहता है।',
+    'पूरी तरह ऑफ़लाइन। कोई विज्ञापन नहीं, कोई असली पैसे की खरीदारी नहीं, और सारा डेटा आपके डिवाइस पर सुरक्षित रहता है।',
   resetProgress: 'प्रोफ़ाइल प्रगति रीसेट करें',
   confirmReset: 'पुष्टि के लिए फिर दबाएँ',
   minutesShort: 'मि',
@@ -459,7 +618,6 @@ const HI: TranslationStrings = {
   },
 };
 
-// Extensible registry prepared for Spanish (es), French (fr), German (de), Portuguese (pt), Arabic (ar)
 export const SUPPORTED_LANGUAGES: Array<{
   code: FutureLanguageCode;
   label: string;

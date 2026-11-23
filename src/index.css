@@ -4,13 +4,34 @@
   :root {
     --font-display: 'Fredoka', system-ui, -apple-system, sans-serif;
     --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+
+    --bg-primary: #10152E;
+    --bg-secondary: #192344;
+    --bg-card: #222E52;
+    --primary-blue: #287BFF;
+    --neon-purple: #A855F7;
+    --neon-cyan: #22D3EE;
+    --reward-yellow: #FFD43B;
+    --success-green: #35D982;
+    --danger-red: #FF5B6E;
+    --text-primary: #FFFFFF;
+    --text-secondary: #AEBBD9;
+
+    --radius-panel: 1.5rem;
+    --radius-card: 1.25rem;
+    --shadow-gaming: 0 12px 32px rgba(6, 10, 28, 0.45);
+    --glow-cyan: 0 0 22px rgba(34, 211, 238, 0.28);
+    --glow-blue: 0 0 24px rgba(40, 123, 255, 0.32);
+    --glow-yellow: 0 0 22px rgba(255, 212, 59, 0.3);
   }
 
+  html,
   body {
     font-family: var(--font-sans);
-    background-color: #F6FAFF;
-    color: #0F172A;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
     overflow-x: hidden;
+    max-width: 100vw;
   }
 
   h1, h2, h3, .font-display {
@@ -20,6 +41,23 @@
 
 .tabular-nums {
   font-variant-numeric: tabular-nums;
+}
+
+.gaming-panel {
+  background: radial-gradient(circle at top left, rgba(40, 123, 255, 0.14), transparent 55%),
+    linear-gradient(160deg, rgba(34, 46, 82, 0.92), rgba(25, 35, 68, 0.94));
+  border: 1px solid rgba(174, 187, 217, 0.18);
+  box-shadow: var(--shadow-gaming);
+}
+
+.gaming-card {
+  background: linear-gradient(165deg, rgba(34, 46, 82, 0.94), rgba(22, 31, 60, 0.96));
+  border: 1px solid rgba(174, 187, 217, 0.16);
+  box-shadow: 0 10px 24px rgba(6, 10, 28, 0.35);
+}
+
+.glossy-btn {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.32), 0 6px 16px rgba(6, 10, 28, 0.35);
 }
 
 @keyframes gentle-float {

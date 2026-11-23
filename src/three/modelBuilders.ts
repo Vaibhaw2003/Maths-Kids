@@ -7,7 +7,9 @@ export type Model3DId =
   | 'apple_tree'
   | 'toy_train'
   | 'math_robot'
-  | 'star_trophy';
+  | 'star_trophy'
+  | 'abacus_toy'
+  | 'number_castle';
 
 export interface Model3DCatalogItem {
   id: Exclude<Model3DId, 'parade'>;
@@ -15,15 +17,18 @@ export interface Model3DCatalogItem {
   nameHi: string;
   partsCount: number;
   accentColor: string;
+  unlockStars: number;
 }
 
 export const MODEL_3D_CATALOG: Model3DCatalogItem[] = [
-  { id: 'race_car', nameEn: 'Math Race Car', nameHi: 'गणित रेस कार', partsCount: 10, accentColor: '#287BFF' },
-  { id: 'rocket', nameEn: 'Number Rocket', nameHi: 'नंबर रॉकेट', partsCount: 9, accentColor: '#FF55AE' },
-  { id: 'apple_tree', nameEn: 'Counting Apple Tree', nameHi: 'सेब का पेड़', partsCount: 11, accentColor: '#35D66F' },
-  { id: 'toy_train', nameEn: 'Choo-Choo Train', nameHi: 'छुक-छुक ट्रेन', partsCount: 11, accentColor: '#FF963C' },
-  { id: 'math_robot', nameEn: 'Robo-Buddy', nameHi: 'रोबो दोस्त', partsCount: 10, accentColor: '#9755F5' },
-  { id: 'star_trophy', nameEn: 'Golden Star Trophy', nameHi: 'सुनहरी स्टार ट्रॉफी', partsCount: 7, accentColor: '#FFD83D' },
+  { id: 'apple_tree', nameEn: 'Apple Tree', nameHi: 'सेब का पेड़', partsCount: 11, accentColor: '#35D66F', unlockStars: 0 },
+  { id: 'toy_train', nameEn: 'Choo-Choo Train', nameHi: 'छुक-छुक ट्रेन', partsCount: 13, accentColor: '#FF963C', unlockStars: 0 },
+  { id: 'math_robot', nameEn: 'Robo-Buddy', nameHi: 'रोबो दोस्त', partsCount: 10, accentColor: '#9755F5', unlockStars: 0 },
+  { id: 'star_trophy', nameEn: 'Golden Star Trophy', nameHi: 'सुनहरी स्टार ट्रॉफी', partsCount: 7, accentColor: '#FFD83D', unlockStars: 0 },
+  { id: 'race_car', nameEn: 'Math Race Car', nameHi: 'गणित रेस कार', partsCount: 10, accentColor: '#287BFF', unlockStars: 0 },
+  { id: 'rocket', nameEn: 'Number Rocket', nameHi: 'नंबर रॉकेट', partsCount: 9, accentColor: '#FF55AE', unlockStars: 0 },
+  { id: 'abacus_toy', nameEn: '3D Counting Abacus', nameHi: '3D गिनतारा', partsCount: 10, accentColor: '#287BFF', unlockStars: 10 },
+  { id: 'number_castle', nameEn: 'Number Castle', nameHi: 'संख्या महल', partsCount: 10, accentColor: '#9755F5', unlockStars: 18 },
 ];
 
 export interface Shared3DResources {
@@ -61,21 +66,76 @@ function addContactShadow(group: THREE.Group, res: Shared3DResources, radius = 1
   group.add(shadow);
 }
 
+interface TagPartOptions {
+  res?: Shared3DResources;
+  highlightable?: boolean;
+  partCategory?: string;
+  partIndex?: number;
+  labelEn?: string;
+  labelHi?: string;
+}
+
 function tagPart(
   mesh: THREE.Object3D,
   explodeVec: THREE.Vector3,
   modelId: string,
-  partName: string
+  partName: string,
+  opts?: TagPartOptions
 ) {
   mesh.userData.basePos = mesh.position.clone();
   mesh.userData.explodeVec = explodeVec;
   mesh.userData.modelId = modelId;
   mesh.userData.partName = partName;
+  mesh.userData.isPartRoot = true;
+  if (opts?.partCategory) mesh.userData.partCategory = opts.partCategory;
+  if (typeof opts?.partIndex === 'number') mesh.userData.partIndex = opts.partIndex;
+  if (opts?.labelEn) mesh.userData.labelEn = opts.labelEn;
+  if (opts?.labelHi) mesh.userData.labelHi = opts.labelHi;
+
   mesh.traverse((child) => {
     if ((child as THREE.Mesh).isMesh) {
-      child.castShadow = true;
-      child.receiveShadow = true;
-      child.userData.modelId = modelId;
+      const m = child as THREE.Mesh;
+      m.castShadow = true;
+      m.receiveShadow = true;
+      m.userData.modelId = modelId;
+      m.userData.partRoot = mesh;
+
+      if (opts?.highlightable && opts.res && m.material && !Array.isArray(m.material)) {
+        const stdMat = m.material as THREE.MeshStandardMaterial;
+        if ('emissive' in stdMat) {
+          const cloned = stdMat.clone();
+          opts.res.materials.push(cloned);
+          m.material = cloned;
+          m.userData.baseEmissive = cloned.emissive.getHex();
+          m.userData.baseEmissiveIntensity = cloned.emissiveIntensity ?? 0;
+        }
+      }
+    }
+  });
+}
+
+export function setObjectHighlighted(
+  obj: THREE.Object3D,
+  highlighted: boolean,
+  highlightHex = 0xffd83d
+) {
+  obj.traverse((child) => {
+    if ((child as THREE.Mesh).isMesh && !child.userData.isShadow) {
+      const m = child as THREE.Mesh;
+      const mat = m.material as THREE.MeshStandardMaterial | undefined;
+      if (mat && 'emissive' in mat) {
+        if (typeof m.userData.baseEmissive !== 'number') {
+          m.userData.baseEmissive = mat.emissive.getHex();
+          m.userData.baseEmissiveIntensity = mat.emissiveIntensity ?? 0;
+        }
+        if (highlighted) {
+          mat.emissive.setHex(highlightHex);
+          mat.emissiveIntensity = 0.52;
+        } else {
+          mat.emissive.setHex(m.userData.baseEmissive);
+          mat.emissiveIntensity = m.userData.baseEmissiveIntensity ?? 0;
+        }
+      }
     }
   });
 }
@@ -357,10 +417,13 @@ export function buildRocket(res: Shared3DResources): THREE.Group {
 }
 
 /**
- * 3. Composite Counting Apple Tree (11 parts: flared trunk + branch fork,
- *    3 layered foliage spheres, 5 glossy red apples with stems, grass mound base)
+ * 3. Composite Counting Apple Tree (supports 1..8 individually tappable apples
+ *    plus animated addition pop-in for `addedFromIndex`)
  */
-export function buildAppleTree(res: Shared3DResources): THREE.Group {
+export function buildAppleTree(
+  res: Shared3DResources,
+  options?: { appleCount?: number; addedFromIndex?: number }
+): THREE.Group {
   const group = new THREE.Group();
   addContactShadow(group, res, 1.8);
 
@@ -405,7 +468,11 @@ export function buildAppleTree(res: Shared3DResources): THREE.Group {
   ];
   const trunkGeo = trackGeo(res, new THREE.LatheGeometry(trunkPts, 18));
   const trunk = new THREE.Mesh(trunkGeo, barkMat);
-  tagPart(trunk, new THREE.Vector3(0, 0, 0), 'apple_tree', 'Trunk');
+  tagPart(trunk, new THREE.Vector3(0, 0, 0), 'apple_tree', 'Trunk', {
+    partCategory: 'trunk',
+    labelEn: 'Tree Trunk',
+    labelHi: 'पेड़ का तना',
+  });
   group.add(trunk);
 
   // Branch fork
@@ -413,7 +480,11 @@ export function buildAppleTree(res: Shared3DResources): THREE.Group {
   const branch = new THREE.Mesh(branchGeo, barkMat);
   branch.position.set(0.32, 1.48, 0.05);
   branch.rotation.z = -0.58;
-  tagPart(branch, new THREE.Vector3(0.35, 0.25, 0), 'apple_tree', 'Branch');
+  tagPart(branch, new THREE.Vector3(0.35, 0.25, 0), 'apple_tree', 'Branch', {
+    partCategory: 'branch',
+    labelEn: 'Branch',
+    labelHi: 'डाली',
+  });
   group.add(branch);
 
   // Foliage clusters
@@ -434,28 +505,50 @@ export function buildAppleTree(res: Shared3DResources): THREE.Group {
   tagPart(crownRight, new THREE.Vector3(0.65, 0.5, -0.15), 'apple_tree', 'Right Canopy');
   group.add(crownRight);
 
-  // 5 Composite Hanging Apples
-  const appleBodyGeo = trackGeo(res, new THREE.SphereGeometry(0.17, 16, 14));
-  const appleStemGeo = trackGeo(res, new THREE.CylinderGeometry(0.02, 0.025, 0.1, 8));
+  // Up to 8 well-spaced tappable apples around the canopy
+  const appleBodyGeo = trackGeo(res, new THREE.SphereGeometry(0.19, 16, 14));
+  const appleStemGeo = trackGeo(res, new THREE.CylinderGeometry(0.022, 0.028, 0.11, 8));
   const appleCoords: Array<[number, number, number]> = [
-    [-0.55, 1.88, 0.74],
-    [0.12, 2.48, 0.86],
-    [0.64, 1.95, 0.52],
-    [-0.18, 1.72, -0.82],
-    [0.45, 2.25, -0.68],
+    [-0.56, 1.88, 0.76],
+    [0.08, 2.52, 0.88],
+    [0.64, 1.98, 0.58],
+    [-0.86, 2.15, 0.42],
+    [0.38, 2.38, 0.72],
+    [-0.22, 1.72, 0.82],
+    [0.82, 2.12, -0.35],
+    [-0.25, 2.25, -0.82],
   ];
-  appleCoords.forEach(([ax, ay, az], idx) => {
+
+  const desiredCount = Math.max(1, Math.min(8, options?.appleCount ?? 5));
+  const addedFrom = options?.addedFromIndex ?? desiredCount;
+
+  appleCoords.slice(0, desiredCount).forEach(([ax, ay, az], idx) => {
     const apple = new THREE.Group();
     apple.add(new THREE.Mesh(appleBodyGeo, appleMat));
     const st = new THREE.Mesh(appleStemGeo, stemMat);
-    st.position.y = 0.18;
+    st.position.y = 0.2;
     apple.add(st);
     apple.position.set(ax, ay, az);
+    const isAdded = idx >= addedFrom;
+    if (isAdded) {
+      apple.scale.setScalar(0.01);
+      apple.userData.popInDelay = (idx - addedFrom) * 0.28;
+      apple.userData.popInProgress = 0;
+      apple.userData.isAddedApple = true;
+    }
     tagPart(
       apple,
       new THREE.Vector3(ax * 0.65, 0.35, az * 0.65),
       'apple_tree',
-      `Apple ${idx + 1}`
+      `Apple ${idx + 1}`,
+      {
+        res,
+        highlightable: true,
+        partCategory: 'apple',
+        partIndex: idx,
+        labelEn: `Apple #${idx + 1}`,
+        labelHi: `सेब #${idx + 1}`,
+      }
     );
     group.add(apple);
   });
@@ -464,12 +557,15 @@ export function buildAppleTree(res: Shared3DResources): THREE.Group {
 }
 
 /**
- * 4. Composite Choo-Choo Toy Train (11 parts: chassis bed, boiler cylinder,
- *    flared smokestack, engineer cabin + pitched roof, cowcatcher, 6 flanged wheels)
+ * 4. Composite Choo-Choo Toy Train (Engine + optional 2 colorful coupled compartments
+ *    with highlightable wheels and compartments)
  */
-export function buildToyTrain(res: Shared3DResources): THREE.Group {
+export function buildToyTrain(
+  res: Shared3DResources,
+  includeCompartments = false
+): THREE.Group {
   const group = new THREE.Group();
-  addContactShadow(group, res, 1.9);
+  addContactShadow(group, res, includeCompartments ? 2.95 : 1.9);
 
   const orangeMat = trackMat(
     res,
@@ -483,6 +579,14 @@ export function buildToyTrain(res: Shared3DResources): THREE.Group {
     res,
     new THREE.MeshStandardMaterial({ color: 0xff55ae, roughness: 0.38, metalness: 0.1 })
   );
+  const greenMat = trackMat(
+    res,
+    new THREE.MeshStandardMaterial({ color: 0x35d66f, roughness: 0.34, metalness: 0.12 })
+  );
+  const purpleMat = trackMat(
+    res,
+    new THREE.MeshStandardMaterial({ color: 0x9755f5, roughness: 0.34, metalness: 0.12 })
+  );
   const brassMat = trackMat(
     res,
     new THREE.MeshStandardMaterial({ color: 0xffd83d, roughness: 0.22, metalness: 0.86 })
@@ -492,19 +596,31 @@ export function buildToyTrain(res: Shared3DResources): THREE.Group {
     new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.45, metalness: 0.72 })
   );
 
+  const xOffset = includeCompartments ? 1.45 : 0;
+
   // Chassis Base
   const baseGeo = trackGeo(res, new THREE.BoxGeometry(2.5, 0.22, 1.12));
   const base = new THREE.Mesh(baseGeo, darkMetal);
-  base.position.set(0, 0.38, 0);
-  tagPart(base, new THREE.Vector3(0, 0.05, 0), 'toy_train', 'Chassis');
+  base.position.set(xOffset, 0.38, 0);
+  tagPart(base, new THREE.Vector3(0, 0.05, 0), 'toy_train', 'Chassis', {
+    partCategory: 'engine',
+    labelEn: 'Engine',
+    labelHi: 'इंजन',
+  });
   group.add(base);
 
   // Boiler barrel
   const boilerGeo = trackGeo(res, new THREE.CylinderGeometry(0.45, 0.45, 1.38, 24));
   boilerGeo.rotateZ(Math.PI / 2);
   const boiler = new THREE.Mesh(boilerGeo, orangeMat);
-  boiler.position.set(0.32, 0.92, 0);
-  tagPart(boiler, new THREE.Vector3(0.3, 0.45, 0), 'toy_train', 'Boiler');
+  boiler.position.set(0.32 + xOffset, 0.92, 0);
+  tagPart(boiler, new THREE.Vector3(0.3, 0.45, 0), 'toy_train', 'Boiler', {
+    res,
+    highlightable: true,
+    partCategory: 'engine',
+    labelEn: 'Engine Boiler',
+    labelHi: 'इंजन बॉयलर',
+  });
   group.add(boiler);
 
   // Smokestack (Lathe)
@@ -516,21 +632,33 @@ export function buildToyTrain(res: Shared3DResources): THREE.Group {
   ];
   const stackGeo = trackGeo(res, new THREE.LatheGeometry(stackPts, 18));
   const stack = new THREE.Mesh(stackGeo, brassMat);
-  stack.position.set(0.72, 1.32, 0);
-  tagPart(stack, new THREE.Vector3(0.4, 0.95, 0), 'toy_train', 'Smokestack');
+  stack.position.set(0.72 + xOffset, 1.32, 0);
+  tagPart(stack, new THREE.Vector3(0.4, 0.95, 0), 'toy_train', 'Smokestack', {
+    res,
+    highlightable: true,
+    partCategory: 'engine',
+    labelEn: 'Smokestack',
+    labelHi: 'चिमनी',
+  });
   group.add(stack);
 
   // Engineer Cabin
   const cabinGeo = trackGeo(res, new THREE.BoxGeometry(0.95, 0.98, 1.05));
   const cabin = new THREE.Mesh(cabinGeo, blueMat);
-  cabin.position.set(-0.72, 0.98, 0);
-  tagPart(cabin, new THREE.Vector3(-0.45, 0.5, 0), 'toy_train', 'Cabin');
+  cabin.position.set(-0.72 + xOffset, 0.98, 0);
+  tagPart(cabin, new THREE.Vector3(-0.45, 0.5, 0), 'toy_train', 'Cabin', {
+    res,
+    highlightable: true,
+    partCategory: 'engine',
+    labelEn: 'Driver Cabin',
+    labelHi: 'ड्राइवर केबिन',
+  });
   group.add(cabin);
 
   // Cabin Roof
   const roofGeo = trackGeo(res, new THREE.BoxGeometry(1.12, 0.14, 1.22));
   const roof = new THREE.Mesh(roofGeo, redMat);
-  roof.position.set(-0.72, 1.54, 0);
+  roof.position.set(-0.72 + xOffset, 1.54, 0);
   tagPart(roof, new THREE.Vector3(-0.45, 1.05, 0), 'toy_train', 'Cabin Roof');
   group.add(roof);
 
@@ -539,11 +667,11 @@ export function buildToyTrain(res: Shared3DResources): THREE.Group {
   bumperGeo.rotateY(Math.PI / 4);
   bumperGeo.rotateZ(-Math.PI / 2);
   const bumper = new THREE.Mesh(bumperGeo, redMat);
-  bumper.position.set(1.36, 0.34, 0);
+  bumper.position.set(1.36 + xOffset, 0.34, 0);
   tagPart(bumper, new THREE.Vector3(0.75, 0.05, 0), 'toy_train', 'Cowcatcher');
   group.add(bumper);
 
-  // 4 Large & 2 Front Wheels
+  // 6 Engine Wheels
   const wheelGeo = trackGeo(res, new THREE.CylinderGeometry(0.3, 0.3, 0.14, 20));
   wheelGeo.rotateX(Math.PI / 2);
   const hubGeo = trackGeo(res, new THREE.CylinderGeometry(0.13, 0.13, 0.17, 14));
@@ -560,15 +688,95 @@ export function buildToyTrain(res: Shared3DResources): THREE.Group {
     const wg = new THREE.Group();
     wg.add(new THREE.Mesh(wheelGeo, redMat));
     wg.add(new THREE.Mesh(hubGeo, brassMat));
-    wg.position.set(wx, 0.3, wz);
+    wg.position.set(wx + xOffset, 0.3, wz);
     tagPart(
       wg,
       new THREE.Vector3(wx * 0.2, -0.05, Math.sign(wz) * 0.5),
       'toy_train',
-      `Train Wheel ${idx + 1}`
+      `Train Wheel ${idx + 1}`,
+      {
+        res,
+        highlightable: true,
+        partCategory: 'wheel',
+        partIndex: idx,
+        labelEn: `Engine Wheel #${idx + 1}`,
+        labelHi: `पहिया #${idx + 1}`,
+      }
     );
     group.add(wg);
   });
+
+  // Coupled Compartments (Passenger / Cargo Cars)
+  if (includeCompartments) {
+    const carBodyGeo = trackGeo(res, new THREE.BoxGeometry(1.42, 0.78, 1.02));
+    const carRoofGeo = trackGeo(res, new THREE.BoxGeometry(1.52, 0.14, 1.12));
+    const carBaseGeo = trackGeo(res, new THREE.BoxGeometry(1.56, 0.18, 1.06));
+    const linkGeo = trackGeo(res, new THREE.BoxGeometry(0.42, 0.1, 0.16));
+
+    const cars: Array<{ x: number; mat: THREE.Material }> = [
+      { x: -0.78, mat: greenMat },
+      { x: -2.62, mat: purpleMat },
+    ];
+
+    cars.forEach((car, carIdx) => {
+      const carGroup = new THREE.Group();
+      const cBase = new THREE.Mesh(carBaseGeo, darkMetal);
+      cBase.position.y = 0.34;
+      const cBody = new THREE.Mesh(carBodyGeo, car.mat);
+      cBody.position.y = 0.82;
+      const cRoof = new THREE.Mesh(carRoofGeo, brassMat);
+      cRoof.position.y = 1.28;
+      const link = new THREE.Mesh(linkGeo, darkMetal);
+      link.position.set(0.9, 0.34, 0);
+      carGroup.add(cBase, cBody, cRoof, link);
+
+      carGroup.position.set(car.x, 0, 0);
+      tagPart(
+        carGroup,
+        new THREE.Vector3(-0.35 * (carIdx + 1), 0.35, 0),
+        'toy_train',
+        `Compartment ${carIdx + 1}`,
+        {
+          res,
+          highlightable: true,
+          partCategory: 'compartment',
+          partIndex: carIdx,
+          labelEn: `Train Car #${carIdx + 1}`,
+          labelHi: `डिब्बा #${carIdx + 1}`,
+        }
+      );
+      group.add(carGroup);
+
+      // 4 wheels per compartment
+      [
+        [-0.45, 0.56],
+        [-0.45, -0.56],
+        [0.45, 0.56],
+        [0.45, -0.56],
+      ].forEach(([wx, wz], wIdx) => {
+        const wg = new THREE.Group();
+        wg.add(new THREE.Mesh(wheelGeo, blueMat));
+        wg.add(new THREE.Mesh(hubGeo, brassMat));
+        wg.position.set(car.x + wx, 0.28, wz);
+        const totalWheelIdx = 6 + carIdx * 4 + wIdx;
+        tagPart(
+          wg,
+          new THREE.Vector3(-0.35 * (carIdx + 1), -0.05, Math.sign(wz) * 0.45),
+          'toy_train',
+          `Car Wheel ${totalWheelIdx + 1}`,
+          {
+            res,
+            highlightable: true,
+            partCategory: 'wheel',
+            partIndex: totalWheelIdx,
+            labelEn: `Car Wheel #${totalWheelIdx + 1}`,
+            labelHi: `पहिया #${totalWheelIdx + 1}`,
+          }
+        );
+        group.add(wg);
+      });
+    });
+  }
 
   return group;
 }
@@ -627,7 +835,14 @@ export function buildMathRobot(res: Shared3DResources): THREE.Group {
     leg.position.y = 0.55;
     legGroup.add(boot, leg);
     legGroup.position.set(lx, 0, 0);
-    tagPart(legGroup, new THREE.Vector3(lx * 0.6, -0.05, 0), 'math_robot', `Leg ${i + 1}`);
+    tagPart(legGroup, new THREE.Vector3(lx * 0.6, -0.05, 0), 'math_robot', `Leg ${i + 1}`, {
+      res,
+      highlightable: true,
+      partCategory: 'legs',
+      partIndex: i,
+      labelEn: `Leg #${i + 1}`,
+      labelHi: `पैर #${i + 1}`,
+    });
     group.add(legGroup);
   });
 
@@ -635,21 +850,42 @@ export function buildMathRobot(res: Shared3DResources): THREE.Group {
   const torsoGeo = trackGeo(res, new THREE.BoxGeometry(1.16, 1.05, 0.78));
   const torso = new THREE.Mesh(torsoGeo, purpleMat);
   torso.position.set(0, 1.24, 0);
-  tagPart(torso, new THREE.Vector3(0, 0.25, 0), 'math_robot', 'Torso');
+  tagPart(torso, new THREE.Vector3(0, 0.25, 0), 'math_robot', 'Torso', {
+    res,
+    highlightable: true,
+    partCategory: 'torso',
+    partIndex: 0,
+    labelEn: 'Body Torso',
+    labelHi: 'शरीर',
+  });
   group.add(torso);
 
   // Chest Dial Screen
   const chestGeo = trackGeo(res, new THREE.BoxGeometry(0.76, 0.52, 0.12));
   const chest = new THREE.Mesh(chestGeo, screenMat);
   chest.position.set(0, 1.28, 0.38);
-  tagPart(chest, new THREE.Vector3(0, 0.25, 0.65), 'math_robot', 'Chest Display');
+  tagPart(chest, new THREE.Vector3(0, 0.25, 0.65), 'math_robot', 'Chest Display', {
+    res,
+    highlightable: true,
+    partCategory: 'chest',
+    partIndex: 0,
+    labelEn: 'Math Screen',
+    labelHi: 'गणित स्क्रीन',
+  });
   group.add(chest);
 
   // Head
   const headGeo = trackGeo(res, new THREE.BoxGeometry(0.92, 0.74, 0.72));
   const head = new THREE.Mesh(headGeo, silverMat);
   head.position.set(0, 2.22, 0);
-  tagPart(head, new THREE.Vector3(0, 0.85, 0), 'math_robot', 'Head');
+  tagPart(head, new THREE.Vector3(0, 0.85, 0), 'math_robot', 'Head', {
+    res,
+    highlightable: true,
+    partCategory: 'head',
+    partIndex: 0,
+    labelEn: 'Robot Head',
+    labelHi: 'सिर',
+  });
   group.add(head);
 
   // Visor Eyes
@@ -657,7 +893,14 @@ export function buildMathRobot(res: Shared3DResources): THREE.Group {
   [-0.22, 0.22].forEach((ex, i) => {
     const eye = new THREE.Mesh(eyeGeo, cyanGlowMat);
     eye.position.set(ex, 2.26, 0.35);
-    tagPart(eye, new THREE.Vector3(ex * 0.5, 0.85, 0.6), 'math_robot', `Eye ${i + 1}`);
+    tagPart(eye, new THREE.Vector3(ex * 0.5, 0.85, 0.6), 'math_robot', `Eye ${i + 1}`, {
+      res,
+      highlightable: true,
+      partCategory: 'eyes',
+      partIndex: i,
+      labelEn: `Eye #${i + 1}`,
+      labelHi: `आँख #${i + 1}`,
+    });
     group.add(eye);
   });
 
@@ -669,7 +912,14 @@ export function buildMathRobot(res: Shared3DResources): THREE.Group {
   bulb.position.y = 0.38;
   antGroup.add(rod, bulb);
   antGroup.position.set(0, 2.58, 0);
-  tagPart(antGroup, new THREE.Vector3(0, 1.35, 0), 'math_robot', 'Antenna');
+  tagPart(antGroup, new THREE.Vector3(0, 1.35, 0), 'math_robot', 'Antenna', {
+    res,
+    highlightable: true,
+    partCategory: 'antenna',
+    partIndex: 0,
+    labelEn: 'Antenna',
+    labelHi: 'एंटीना',
+  });
   group.add(antGroup);
 
   // Articulated Arms
@@ -681,7 +931,7 @@ export function buildMathRobot(res: Shared3DResources): THREE.Group {
   const armGeo = trackGeo(res, new THREE.TubeGeometry(armCurve, 16, 0.1, 12, false));
   const handGeo = trackGeo(res, new THREE.SphereGeometry(0.14, 14, 14));
 
-  [-1, 1].forEach((side) => {
+  [-1, 1].forEach((side, idx) => {
     const armGroup = new THREE.Group();
     const armMesh = new THREE.Mesh(armGeo, purpleMat);
     if (side < 0) armMesh.scale.x = -1;
@@ -689,7 +939,14 @@ export function buildMathRobot(res: Shared3DResources): THREE.Group {
     hand.position.set(side * 0.32, -0.58, 0.2);
     armGroup.add(armMesh, hand);
     armGroup.position.set(side * 0.6, 1.56, 0);
-    tagPart(armGroup, new THREE.Vector3(side * 0.75, 0.35, 0.2), 'math_robot', 'Arm');
+    tagPart(armGroup, new THREE.Vector3(side * 0.75, 0.35, 0.2), 'math_robot', `Arm ${idx + 1}`, {
+      res,
+      highlightable: true,
+      partCategory: 'arms',
+      partIndex: idx,
+      labelEn: `Arm #${idx + 1}`,
+      labelHi: `हाथ #${idx + 1}`,
+    });
     group.add(armGroup);
   });
 
@@ -726,13 +983,25 @@ export function buildStarTrophy(res: Shared3DResources): THREE.Group {
   const baseGeo = trackGeo(res, new THREE.CylinderGeometry(0.75, 0.88, 0.32, 24));
   const base = new THREE.Mesh(baseGeo, marbleMat);
   base.position.set(0, 0.16, 0);
-  tagPart(base, new THREE.Vector3(0, -0.05, 0), 'star_trophy', 'Pedestal');
+  tagPart(base, new THREE.Vector3(0, -0.05, 0), 'star_trophy', 'Pedestal', {
+    res,
+    highlightable: true,
+    partCategory: 'pedestal',
+    labelEn: 'Trophy Pedestal',
+    labelHi: 'ट्रॉफी आधार',
+  });
   group.add(base);
 
   const plaqueGeo = trackGeo(res, new THREE.BoxGeometry(0.68, 0.22, 0.14));
   const plaque = new THREE.Mesh(plaqueGeo, accentMat);
   plaque.position.set(0, 0.2, 0.76);
-  tagPart(plaque, new THREE.Vector3(0, 0, 0.65), 'star_trophy', 'Nameplate');
+  tagPart(plaque, new THREE.Vector3(0, 0, 0.65), 'star_trophy', 'Nameplate', {
+    res,
+    highlightable: true,
+    partCategory: 'plaque',
+    labelEn: 'Champion Plaque',
+    labelHi: 'चैंपियन पट्टिका',
+  });
   group.add(plaque);
 
   // Lathe column + cup
@@ -748,7 +1017,13 @@ export function buildStarTrophy(res: Shared3DResources): THREE.Group {
   ];
   const cupGeo = trackGeo(res, new THREE.LatheGeometry(cupPts, 28));
   const cup = new THREE.Mesh(cupGeo, goldMat);
-  tagPart(cup, new THREE.Vector3(0, 0.35, 0), 'star_trophy', 'Trophy Cup');
+  tagPart(cup, new THREE.Vector3(0, 0.35, 0), 'star_trophy', 'Trophy Cup', {
+    res,
+    highlightable: true,
+    partCategory: 'cup',
+    labelEn: 'Golden Cup',
+    labelHi: 'सुनहरा कप',
+  });
   group.add(cup);
 
   // Twin curved handles
@@ -759,10 +1034,17 @@ export function buildStarTrophy(res: Shared3DResources): THREE.Group {
     new THREE.Vector3(0.42, 1.34, 0),
   ]);
   const handleGeo = trackGeo(res, new THREE.TubeGeometry(handleCurve, 20, 0.065, 10, false));
-  [-1, 1].forEach((side) => {
+  [-1, 1].forEach((side, i) => {
     const h = new THREE.Mesh(handleGeo, goldMat);
     if (side < 0) h.scale.x = -1;
-    tagPart(h, new THREE.Vector3(side * 0.75, 0.45, 0), 'star_trophy', 'Handle');
+    tagPart(h, new THREE.Vector3(side * 0.75, 0.45, 0), 'star_trophy', `Handle ${i + 1}`, {
+      res,
+      highlightable: true,
+      partCategory: 'handle',
+      partIndex: i,
+      labelEn: `Handle #${i + 1}`,
+      labelHi: `हैंडल #${i + 1}`,
+    });
     group.add(h);
   });
 
@@ -781,8 +1063,185 @@ export function buildStarTrophy(res: Shared3DResources): THREE.Group {
   starGeo.center();
   const starMesh = new THREE.Mesh(starGeo, goldMat);
   starMesh.position.set(0, 2.48, 0);
-  tagPart(starMesh, new THREE.Vector3(0, 1.15, 0), 'star_trophy', 'Golden Star');
+  tagPart(starMesh, new THREE.Vector3(0, 1.15, 0), 'star_trophy', 'Golden Star', {
+    res,
+    highlightable: true,
+    partCategory: 'star',
+    labelEn: 'Golden Star',
+    labelHi: 'सुनहरा तारा',
+  });
   group.add(starMesh);
+
+  return group;
+}
+
+/**
+ * 7. Unlockable 3D Counting Abacus (10 parts: base plinth, 2 uprights, top arch,
+ *    3 steel rods, 3 bead rows)
+ */
+export function buildAbacusToy(res: Shared3DResources): THREE.Group {
+  const group = new THREE.Group();
+  addContactShadow(group, res, 1.6);
+
+  const woodMat = trackMat(
+    res,
+    new THREE.MeshStandardMaterial({
+      color: 0xd97706,
+      roughness: 0.65,
+      metalness: 0.05,
+      bumpMap: res.bumpTexture,
+      bumpScale: 0.015,
+    })
+  );
+  const steelMat = trackMat(
+    res,
+    new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.2, metalness: 0.9 })
+  );
+  const beadColors = [0xff55ae, 0x35d66f, 0x287bff, 0xffd83d, 0x9755f5];
+
+  const base = new THREE.Mesh(trackGeo(res, new THREE.BoxGeometry(2.3, 0.24, 0.85)), woodMat);
+  base.position.set(0, 0.12, 0);
+  tagPart(base, new THREE.Vector3(0, -0.05, 0), 'abacus_toy', 'Wood Base');
+  group.add(base);
+
+  const postGeo = trackGeo(res, new THREE.CylinderGeometry(0.11, 0.13, 1.95, 16));
+  [-0.95, 0.95].forEach((px, i) => {
+    const post = new THREE.Mesh(postGeo, woodMat);
+    post.position.set(px, 1.12, 0);
+    tagPart(post, new THREE.Vector3(Math.sign(px) * 0.55, 0.2, 0), 'abacus_toy', `Frame Post ${i + 1}`);
+    group.add(post);
+  });
+
+  const topBar = new THREE.Mesh(trackGeo(res, new THREE.BoxGeometry(2.2, 0.22, 0.42)), woodMat);
+  topBar.position.set(0, 2.08, 0);
+  tagPart(topBar, new THREE.Vector3(0, 0.85, 0), 'abacus_toy', 'Top Beam');
+  group.add(topBar);
+
+  const rodGeo = trackGeo(res, new THREE.CylinderGeometry(0.035, 0.035, 1.88, 12));
+  rodGeo.rotateZ(Math.PI / 2);
+  const beadGeo = trackGeo(res, new THREE.SphereGeometry(0.16, 16, 14));
+  beadGeo.scale(0.85, 1, 1);
+
+  [0.65, 1.15, 1.65].forEach((ry, rowIdx) => {
+    const rowGroup = new THREE.Group();
+    rowGroup.add(new THREE.Mesh(rodGeo, steelMat));
+    const beadCount = 4 + (rowIdx % 2);
+    for (let b = 0; b < beadCount; b++) {
+      const mat = trackMat(
+        res,
+        new THREE.MeshPhysicalMaterial({
+          color: beadColors[(b + rowIdx) % beadColors.length],
+          roughness: 0.25,
+          clearcoat: 0.8,
+        })
+      );
+      const bead = new THREE.Mesh(beadGeo, mat);
+      bead.position.set(-0.62 + b * 0.32, 0, 0);
+      rowGroup.add(bead);
+    }
+    rowGroup.position.set(0, ry, 0);
+    tagPart(rowGroup, new THREE.Vector3(0, (rowIdx - 1) * 0.35, 0.45), 'abacus_toy', `Bead Row ${rowIdx + 1}`, {
+      res,
+      highlightable: true,
+      partCategory: 'bead_row',
+      partIndex: rowIdx,
+      labelEn: `Bead Row #${rowIdx + 1} (${beadCount} beads)`,
+      labelHi: `मोती पंक्ति #${rowIdx + 1} (${beadCount} मोती)`,
+    });
+    group.add(rowGroup);
+  });
+
+  return group;
+}
+
+/**
+ * 8. Unlockable Number Castle (10 parts: courtyard plinth, keep, keep roof,
+ *    2 side towers + 2 roofs, gatehouse, doorway, pennant flag)
+ */
+export function buildNumberCastle(res: Shared3DResources): THREE.Group {
+  const group = new THREE.Group();
+  addContactShadow(group, res, 1.9);
+
+  const stoneMat = trackMat(
+    res,
+    new THREE.MeshStandardMaterial({
+      color: 0xf1f5f9,
+      roughness: 0.78,
+      metalness: 0.04,
+      bumpMap: res.bumpTexture,
+      bumpScale: 0.02,
+    })
+  );
+  const roofMat = trackMat(
+    res,
+    new THREE.MeshStandardMaterial({ color: 0x287bff, roughness: 0.35, metalness: 0.15 })
+  );
+  const goldMat = trackMat(
+    res,
+    new THREE.MeshStandardMaterial({ color: 0xffd83d, roughness: 0.25, metalness: 0.75 })
+  );
+  const doorMat = trackMat(
+    res,
+    new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.82 })
+  );
+
+  const plinth = new THREE.Mesh(trackGeo(res, new THREE.CylinderGeometry(1.45, 1.55, 0.24, 24)), stoneMat);
+  plinth.position.set(0, 0.12, 0);
+  tagPart(plinth, new THREE.Vector3(0, -0.05, 0), 'number_castle', 'Courtyard');
+  group.add(plinth);
+
+  const keep = new THREE.Mesh(trackGeo(res, new THREE.BoxGeometry(1.15, 1.55, 1.05)), stoneMat);
+  keep.position.set(0, 1.0, -0.1);
+  tagPart(keep, new THREE.Vector3(0, 0.45, -0.2), 'number_castle', 'Central Keep', {
+    res,
+    highlightable: true,
+    partCategory: 'tower',
+    labelEn: 'Main Keep',
+    labelHi: 'मुख्य मीनार',
+  });
+  group.add(keep);
+
+  const keepRoof = new THREE.Mesh(trackGeo(res, new THREE.ConeGeometry(0.86, 0.82, 4)), roofMat);
+  keepRoof.rotation.y = Math.PI / 4;
+  keepRoof.position.set(0, 2.18, -0.1);
+  tagPart(keepRoof, new THREE.Vector3(0, 1.05, -0.2), 'number_castle', 'Keep Roof');
+  group.add(keepRoof);
+
+  const towerGeo = trackGeo(res, new THREE.CylinderGeometry(0.34, 0.38, 1.38, 18));
+  const coneGeo = trackGeo(res, new THREE.ConeGeometry(0.42, 0.62, 18));
+  [-0.86, 0.86].forEach((tx, idx) => {
+    const tower = new THREE.Mesh(towerGeo, stoneMat);
+    tower.position.set(tx, 0.92, 0.22);
+    tagPart(tower, new THREE.Vector3(Math.sign(tx) * 0.6, 0.25, 0.2), 'number_castle', `Tower ${idx + 1}`, {
+      res,
+      highlightable: true,
+      partCategory: 'tower',
+      partIndex: idx,
+      labelEn: `Castle Tower #${idx + 1}`,
+      labelHi: `किला मीनार #${idx + 1}`,
+    });
+    group.add(tower);
+
+    const tRoof = new THREE.Mesh(coneGeo, roofMat);
+    tRoof.position.set(tx, 1.9, 0.22);
+    tagPart(tRoof, new THREE.Vector3(Math.sign(tx) * 0.6, 0.9, 0.2), 'number_castle', `Tower Roof ${idx + 1}`);
+    group.add(tRoof);
+  });
+
+  const door = new THREE.Mesh(trackGeo(res, new THREE.BoxGeometry(0.46, 0.68, 0.14)), doorMat);
+  door.position.set(0, 0.56, 0.46);
+  tagPart(door, new THREE.Vector3(0, 0.1, 0.65), 'number_castle', 'Castle Gate');
+  group.add(door);
+
+  const flagGroup = new THREE.Group();
+  const pole = new THREE.Mesh(trackGeo(res, new THREE.CylinderGeometry(0.03, 0.03, 0.46, 8)), goldMat);
+  pole.position.y = 0.23;
+  const flag = new THREE.Mesh(trackGeo(res, new THREE.BoxGeometry(0.34, 0.2, 0.03)), goldMat);
+  flag.position.set(0.17, 0.36, 0);
+  flagGroup.add(pole, flag);
+  flagGroup.position.set(0, 2.58, -0.1);
+  tagPart(flagGroup, new THREE.Vector3(0, 1.45, -0.2), 'number_castle', 'Royal Flag');
+  group.add(flagGroup);
 
   return group;
 }
@@ -866,11 +1325,87 @@ export function buildCountable3DItem(
 
   g.traverse((c) => {
     if ((c as THREE.Mesh).isMesh && !c.userData.isShadow) {
-      c.castShadow = true;
-      c.receiveShadow = true;
+      const m = c as THREE.Mesh;
+      m.castShadow = true;
+      m.receiveShadow = true;
+      const mat = m.material as THREE.MeshStandardMaterial | undefined;
+      if (mat && 'emissive' in mat) {
+        m.userData.baseEmissive = mat.emissive.getHex();
+        m.userData.baseEmissiveIntensity = mat.emissiveIntensity ?? 0;
+      }
     }
   });
   return g;
+}
+
+/**
+ * Translucent glowing slot cube/ring for 3D Missing Numbers (e.g. 2 + ? = 5)
+ */
+export function buildGhostSlotItem(res: Shared3DResources): THREE.Group {
+  const g = new THREE.Group();
+  addContactShadow(g, res, 0.55);
+  const ring = new THREE.Mesh(
+    trackGeo(res, new THREE.TorusGeometry(0.36, 0.06, 12, 24)),
+    trackMat(
+      res,
+      new THREE.MeshStandardMaterial({
+        color: 0x9755f5,
+        emissive: 0x9755f5,
+        emissiveIntensity: 0.5,
+        roughness: 0.3,
+        transparent: true,
+        opacity: 0.85,
+      })
+    )
+  );
+  ring.rotation.x = Math.PI / 2;
+  ring.position.y = 0.45;
+  const orb = new THREE.Mesh(
+    trackGeo(res, new THREE.OctahedronGeometry(0.22, 0)),
+    trackMat(
+      res,
+      new THREE.MeshStandardMaterial({
+        color: 0xffd83d,
+        emissive: 0xffd83d,
+        emissiveIntensity: 0.45,
+        transparent: true,
+        opacity: 0.72,
+      })
+    )
+  );
+  orb.position.y = 0.52;
+  g.add(ring, orb);
+  g.userData.isGhostSlot = true;
+  return g;
+}
+
+/**
+ * Miniature 3D celebration star used in the burst particle effect
+ */
+export function buildCelebrationStarMesh(res: Shared3DResources, colorHex: number): THREE.Mesh {
+  const shape = createStarShape(0.24, 0.11, 5);
+  const geo = trackGeo(
+    res,
+    new THREE.ExtrudeGeometry(shape, {
+      depth: 0.06,
+      bevelEnabled: true,
+      bevelThickness: 0.02,
+      bevelSize: 0.015,
+      bevelSegments: 2,
+    })
+  );
+  geo.center();
+  const mat = trackMat(
+    res,
+    new THREE.MeshStandardMaterial({
+      color: colorHex,
+      emissive: colorHex,
+      emissiveIntensity: 0.55,
+      roughness: 0.25,
+      metalness: 0.6,
+    })
+  );
+  return new THREE.Mesh(geo, mat);
 }
 
 /**

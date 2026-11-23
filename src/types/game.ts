@@ -29,16 +29,27 @@ export type GameModeId =
   | 'word_problems'
   | 'counting_100';
 
+export type WorldId =
+  | 'fruit_island'
+  | 'robot_city'
+  | 'racing_valley'
+  | 'space_galaxy'
+  | 'animal_kingdom'
+  | 'treasure_island';
+
 export type ScreenRoute =
   | 'splash'
-  | 'welcome'
-  | 'profiles'
   | 'home'
+  | 'worlds'
+  | 'levels'
   | 'games'
   | 'toybox3d'
   | 'play'
   | 'results'
   | 'rewards'
+  | 'shop'
+  | 'daily'
+  | 'profile'
   | 'parent';
 
 export type VisualObjectType =
@@ -276,6 +287,271 @@ export const ACHIEVEMENT_CATALOG: AchievementDefinition[] = [
   },
 ];
 
+export interface WorldLevelProgress {
+  highestUnlockedLevel: number;
+  levelStars: Record<number, number>;
+}
+
+export interface WorldDefinition {
+  id: WorldId;
+  order: number;
+  nameEn: string;
+  nameHi: string;
+  subtitleEn: string;
+  subtitleHi: string;
+  totalLevels: number;
+  accentHex: string;
+  secondaryHex: string;
+  unlockRequirementEn: string;
+  unlockRequirementHi: string;
+  /** Minimum stars required OR previous world levels required */
+  requiredStars: number;
+  requiredPrevWorldLevels: number;
+  gameModes: GameModeId[];
+  toyboxModel: 'apple_tree' | 'math_robot' | 'race_car' | 'rocket' | 'toy_train' | 'star_trophy';
+}
+
+export const WORLDS_CATALOG: WorldDefinition[] = [
+  {
+    id: 'fruit_island',
+    order: 1,
+    nameEn: 'Fruit Island',
+    nameHi: 'फल द्वीप',
+    subtitleEn: 'Sunny orchards for counting & early addition',
+    subtitleHi: 'गिनती और जोड़ सीखने का हरा-भरा द्वीप',
+    totalLevels: 100,
+    accentHex: '#35D982',
+    secondaryHex: '#22D3EE',
+    unlockRequirementEn: 'Unlocked from start',
+    unlockRequirementHi: 'शुरू से खुला है',
+    requiredStars: 0,
+    requiredPrevWorldLevels: 0,
+    gameModes: ['count_objects', 'addition_fun', 'addition_puzzle', 'ten_frame'],
+    toyboxModel: 'apple_tree',
+  },
+  {
+    id: 'robot_city',
+    order: 2,
+    nameEn: 'Robot City',
+    nameHi: 'रोबोट सिटी',
+    subtitleEn: 'Neon workshops with subtraction & missing numbers',
+    subtitleHi: 'घटाव और गायब संख्याओं का रोबोट शहर',
+    totalLevels: 100,
+    accentHex: '#A855F7',
+    secondaryHex: '#22D3EE',
+    unlockRequirementEn: 'Complete 3 levels in Fruit Island or earn 8★',
+    unlockRequirementHi: 'फल द्वीप में 3 स्तर जीतें या 8★ कमाएँ',
+    requiredStars: 8,
+    requiredPrevWorldLevels: 3,
+    gameModes: ['subtraction_fun', 'subtraction_puzzle', 'missing_numbers', 'compare_numbers'],
+    toyboxModel: 'math_robot',
+  },
+  {
+    id: 'racing_valley',
+    order: 3,
+    nameEn: 'Racing Valley',
+    nameHi: 'रेसिंग वैली',
+    subtitleEn: 'Turbo tracks for fast sums & number racing',
+    subtitleHi: 'तेज़ जोड़ और कार रेसिंग की घाटी',
+    totalLevels: 100,
+    accentHex: '#FF963C',
+    secondaryHex: '#FFD43B',
+    unlockRequirementEn: 'Complete 3 levels in Robot City or earn 18★',
+    unlockRequirementHi: 'रोबोट सिटी में 3 स्तर जीतें या 18★ कमाएँ',
+    requiredStars: 18,
+    requiredPrevWorldLevels: 3,
+    gameModes: ['math_racing', 'addition_quiz', 'subtraction_quiz', 'three_number_addition'],
+    toyboxModel: 'race_car',
+  },
+  {
+    id: 'space_galaxy',
+    order: 4,
+    nameEn: 'Space Galaxy',
+    nameHi: 'अंतरिक्ष गैलेक्सी',
+    subtitleEn: 'Starry orbits for pyramids & logic puzzles',
+    subtitleHi: 'पिरामिड और तर्क पहेलियों का अंतरिक्ष',
+    totalLevels: 100,
+    accentHex: '#287BFF',
+    secondaryHex: '#A855F7',
+    unlockRequirementEn: 'Complete 3 levels in Racing Valley or earn 30★',
+    unlockRequirementHi: 'रेसिंग वैली में 3 स्तर जीतें या 30★ कमाएँ',
+    requiredStars: 30,
+    requiredPrevWorldLevels: 3,
+    gameModes: ['math_pyramid', 'logic_puzzles', 'math_practice'],
+    toyboxModel: 'rocket',
+  },
+  {
+    id: 'animal_kingdom',
+    order: 5,
+    nameEn: 'Animal Kingdom',
+    nameHi: 'पशु साम्राज्य',
+    subtitleEn: 'Story meadows & 1 to 100 adventures',
+    subtitleHi: 'कहानी के सवाल और 1 से 100 गिनती',
+    totalLevels: 100,
+    accentHex: '#22D3EE',
+    secondaryHex: '#35D982',
+    unlockRequirementEn: 'Complete 3 levels in Space Galaxy or earn 45★',
+    unlockRequirementHi: 'अंतरिक्ष में 3 स्तर जीतें या 45★ कमाएँ',
+    requiredStars: 45,
+    requiredPrevWorldLevels: 3,
+    gameModes: ['word_problems', 'counting_100', 'compare_numbers'],
+    toyboxModel: 'toy_train',
+  },
+  {
+    id: 'treasure_island',
+    order: 6,
+    nameEn: 'Treasure Island',
+    nameHi: 'खजाना द्वीप',
+    subtitleEn: 'Grand champion island of mixed mastery quests',
+    subtitleHi: 'सभी गणित चुनौतियों का ग्रैंड चैंपियन द्वीप',
+    totalLevels: 100,
+    accentHex: '#FFD43B',
+    secondaryHex: '#FF5B6E',
+    unlockRequirementEn: 'Complete 3 levels in Animal Kingdom or earn 60★',
+    unlockRequirementHi: 'पशु साम्राज्य में 3 स्तर जीतें या 60★ कमाएँ',
+    requiredStars: 60,
+    requiredPrevWorldLevels: 3,
+    gameModes: ['math_practice', 'math_pyramid', 'math_racing', 'word_problems'],
+    toyboxModel: 'star_trophy',
+  },
+];
+
+export type ShopCategory =
+  | 'outfit'
+  | 'robot_skin'
+  | 'car_skin'
+  | 'accessory'
+  | 'env_theme';
+
+export interface ShopItem {
+  id: string;
+  category: ShopCategory;
+  nameEn: string;
+  nameHi: string;
+  descriptionEn: string;
+  descriptionHi: string;
+  costCoins: number;
+  previewHex: string;
+  accentHex: string;
+  outfitId?: OutfitId;
+}
+
+export const SHOP_CATALOG: ShopItem[] = [
+  {
+    id: 'outfit_glasses',
+    category: 'outfit',
+    nameEn: 'Cyan Cyber Visor',
+    nameHi: 'नियॉन चश्मा',
+    descriptionEn: 'Equip glowing star glasses on your mascot companion.',
+    descriptionHi: 'अपने साथी को चमकदार स्टार चश्मा पहनाएँ।',
+    costCoins: 40,
+    previewHex: '#22D3EE',
+    accentHex: '#287BFF',
+    outfitId: 'glasses',
+  },
+  {
+    id: 'outfit_crown',
+    category: 'outfit',
+    nameEn: 'Starlight Crown',
+    nameHi: 'सुनहरा मुकुट',
+    descriptionEn: 'Royal golden adventure crown for math champions.',
+    descriptionHi: 'गणित चैंपियन के लिए शाही सुनहरा मुकुट।',
+    costCoins: 80,
+    previewHex: '#FFD43B',
+    accentHex: '#FF963C',
+    outfitId: 'crown',
+  },
+  {
+    id: 'outfit_cape',
+    category: 'outfit',
+    nameEn: 'Heroic Neon Cape',
+    nameHi: 'सुपर हीरो केप',
+    descriptionEn: 'Soar across worlds with a bright adventure cape.',
+    descriptionHi: 'चमकते हीरो केप के साथ दुनिया की सैर करें।',
+    costCoins: 110,
+    previewHex: '#FF5B6E',
+    accentHex: '#A855F7',
+    outfitId: 'cape',
+  },
+  {
+    id: 'robot_cobalt',
+    category: 'robot_skin',
+    nameEn: 'Cobalt Cyber Bot',
+    nameHi: 'कोबाल्ट रोबोट स्किन',
+    descriptionEn: 'Sleek electric blue armor coat for Robo-Buddy.',
+    descriptionHi: 'रोबो दोस्त के लिए इलेक्ट्रिक ब्लू कवच।',
+    costCoins: 75,
+    previewHex: '#287BFF',
+    accentHex: '#22D3EE',
+  },
+  {
+    id: 'robot_gold',
+    category: 'robot_skin',
+    nameEn: 'Solar Gold Bot',
+    nameHi: 'सोलर गोल्ड रोबोट',
+    descriptionEn: 'Shining golden finish for Robo-Buddy in 3D.',
+    descriptionHi: 'रोबो दोस्त के लिए चमकदार सुनहरी स्किन।',
+    costCoins: 140,
+    previewHex: '#FFD43B',
+    accentHex: '#FF963C',
+  },
+  {
+    id: 'car_emerald',
+    category: 'car_skin',
+    nameEn: 'Emerald Turbo',
+    nameHi: 'ग्रीन टर्बो कार',
+    descriptionEn: 'Neon green racing paint with cyan stripes.',
+    descriptionHi: 'नियॉन ग्रीन और सियान रेसिंग कार पेंट।',
+    costCoins: 70,
+    previewHex: '#35D982',
+    accentHex: '#22D3EE',
+  },
+  {
+    id: 'car_plasma',
+    category: 'car_skin',
+    nameEn: 'Plasma Violet Racer',
+    nameHi: 'वायलेट प्लाज़्मा रेसर',
+    descriptionEn: 'Electric purple finish built for Racing Valley.',
+    descriptionHi: 'रेसिंग वैली के लिए पर्पल प्लाज़्मा पेंट।',
+    costCoins: 120,
+    previewHex: '#A855F7',
+    accentHex: '#FFD43B',
+  },
+  {
+    id: 'acc_jetpack',
+    category: 'accessory',
+    nameEn: 'Starlight Jet Wing',
+    nameHi: 'स्टार जेटपैक',
+    descriptionEn: 'Sparkling adventure badge & booster aura.',
+    descriptionHi: 'चमकता हुआ स्टार बूस्टर बैज।',
+    costCoins: 65,
+    previewHex: '#22D3EE',
+    accentHex: '#A855F7',
+  },
+  {
+    id: 'theme_aurora',
+    category: 'env_theme',
+    nameEn: 'Aurora Sky Plaza',
+    nameHi: 'ऑरोरा स्काई थीम',
+    descriptionEn: 'Vibrant teal-blue glow backdrop for your Home hero.',
+    descriptionHi: 'होम स्क्रीन के लिए सुंदर ऑरोरा बैकग्राउंड।',
+    costCoins: 95,
+    previewHex: '#22D3EE',
+    accentHex: '#35D982',
+  },
+  {
+    id: 'theme_cosmic',
+    category: 'env_theme',
+    nameEn: 'Cosmic Nebula',
+    nameHi: 'कॉस्मिक नेबुला थीम',
+    descriptionEn: 'Deep galaxy purple starlight adventure glow.',
+    descriptionHi: 'अंतरिक्ष स्टारलाइट पर्पल थीम।',
+    costCoins: 130,
+    previewHex: '#A855F7',
+    accentHex: '#287BFF',
+  },
+];
+
 export interface ChildProfile {
   id: string;
   nickname: string;
@@ -284,6 +560,8 @@ export interface ChildProfile {
   customMaxNumber: number | null;
   stars: number;
   spentStars: number;
+  xp: number;
+  coins: number;
   dailyCompleted: number;
   dailyGoal: number;
   lastActiveDate: string;
@@ -294,17 +572,40 @@ export interface ChildProfile {
   totalSecondsLearned: number;
   equationsSolved: number;
   perfectScores: number;
+  currentStreak: number;
   unlockedAchievements: AchievementId[];
+  achievementHistory: Array<{ id: AchievementId; unlockedAt: number }>;
+  unlocked3DModels: string[];
+  unlockedWorlds: WorldId[];
+  worldProgress: Record<WorldId, WorldLevelProgress>;
+  ownedShopItems: string[];
+  equippedCosmetics: {
+    robotSkin: string;
+    carSkin: string;
+    accessory: string;
+    envTheme: string;
+  };
+  dailyChallengeState: {
+    lastCompletedDate: string | null;
+    bestScoreToday: number;
+    claimedMissionsDate: string | null;
+    claimedMissionIds: string[];
+  };
+  topicStats: Partial<Record<GameCategory, { attempted: number; correct: number }>>;
 }
 
 export interface GameSessionResult {
   id: string;
   profileId: string;
   gameId: GameModeId;
+  worldId?: WorldId;
+  levelNumber?: number;
   difficulty: DifficultyLevel;
   correctCount: number;
   wrongCount: number;
   starsEarned: number;
+  coinsEarned?: number;
+  xpEarned?: number;
   durationSeconds: number;
   timestamp: number;
 }
@@ -315,4 +616,6 @@ export interface AppSettings {
   voiceEnabled: boolean;
   language: LanguageCode;
   timerEnabledInPractice: boolean;
+  soundVolume: number;
+  musicVolume: number;
 }

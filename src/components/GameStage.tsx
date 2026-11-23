@@ -11,6 +11,7 @@ import {
 import {
   AppSettings,
   ChildProfile,
+  DifficultyLevel,
   GAME_CATALOG,
   GameModeId,
 } from '../types/game';
@@ -28,6 +29,16 @@ interface GameStageProps {
   gameId: GameModeId;
   profile: ChildProfile;
   settings: AppSettings;
+  hideHeader?: boolean;
+  difficultyOverride?: DifficultyLevel;
+  questionsOverride?: number;
+  hintSignal?: number;
+  onProgressChange?: (info: {
+    current: number;
+    total: number;
+    correctCount: number;
+    promptText: string;
+  }) => void;
   onExit: () => void;
   onComplete: (result: {
     gameId: GameModeId;
@@ -42,24 +53,30 @@ export const GameStage: React.FC<GameStageProps> = ({
   gameId,
   profile,
   settings,
+  hideHeader = false,
+  difficultyOverride,
+  questionsOverride,
+  hintSignal = 0,
+  onProgressChange,
   onExit,
   onComplete,
 }) => {
   const t = getTranslations(settings.language);
+  const effectiveDifficulty = difficultyOverride ?? profile.difficulty;
   const gameMeta = useMemo(
     () => GAME_CATALOG.find((g) => g.id === gameId) || GAME_CATALOG[0],
     [gameId]
   );
 
-  const totalQuestions = gameMeta.questionsPerRound;
+  const totalQuestions = questionsOverride ?? gameMeta.questionsPerRound;
   const usedSignaturesRef = useRef<Set<string>>(new Set());
   const startTimeRef = useRef<number>(Date.now());
 
   const [quizRange, setQuizRange] = useState<number | undefined>(
     gameId === 'addition_quiz'
-      ? profile.difficulty === 'easy'
+      ? effectiveDifficulty === 'easy'
         ? 5
-        : profile.difficulty === 'medium'
+        : effectiveDifficulty === 'medium'
         ? 20
         : 100
       : undefined
@@ -69,7 +86,7 @@ export const GameStage: React.FC<GameStageProps> = ({
   const [question, setQuestion] = useState<GeneratedQuestion>(() =>
     generateQuestion(
       gameId,
-      profile.difficulty,
+      effectiveDifficulty,
       profile.customMaxNumber,
       usedSignaturesRef.current,
       quizRange
@@ -114,12 +131,28 @@ export const GameStage: React.FC<GameStageProps> = ({
     };
   }, [question, settings.language]);
 
+  useEffect(() => {
+    if (!hintSignal) return;
+    const wrongChoices = question.choices.filter(
+      (c) => String(c) !== String(question.answer) && !wrongAttemptsOnCurrent.has(String(c))
+    );
+    if (wrongChoices.length > 0) {
+      setWrongAttemptsOnCurrent((prev) => new Set(prev).add(String(wrongChoices[0])));
+    }
+    const hintMsg =
+      settings.language === 'hi'
+        ? 'ध्यान से गिनें! एक गलत विकल्प हटा दिया गया है।'
+        : 'Hint used! One wrong choice was removed—count closely!';
+    setFeedback({ type: 'retry', text: hintMsg });
+    audioService.speak(getPromptText(question, settings.language), settings.language, true);
+  }, [hintSignal]);
+
   const loadNextQuestion = (nextIdx: number, customQuizRange = quizRange) => {
     setQuestionIndex(nextIdx);
     setQuestion(
       generateQuestion(
         gameId,
-        profile.difficulty,
+        effectiveDifficulty,
         profile.customMaxNumber,
         usedSignaturesRef.current,
         customQuizRange
@@ -215,50 +248,61 @@ export const GameStage: React.FC<GameStageProps> = ({
   const promptText = getPromptText(question, settings.language);
   const progressPercent = Math.round(((questionIndex + (isAdvancing ? 1 : 0)) / totalQuestions) * 100);
 
+  useEffect(() => {
+    onProgressChange?.({
+      current: questionIndex + 1,
+      total: totalQuestions,
+      correctCount,
+      promptText,
+    });
+  }, [questionIndex, totalQuestions, correctCount, promptText, onProgressChange]);
+
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-5 sm:py-8">
-      {/* Top Game HUD */}
-      <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-        <button
-          type="button"
-          onClick={() => {
-            audioService.playClick();
-            onExit();
-          }}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-white border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 transition-colors shadow-xs whitespace-nowrap shrink-0"
-        >
-          <ArrowLeft className="w-5 h-5" />
-          <span>{t.backHome}</span>
-        </button>
+    <div className={hideHeader ? 'w-full' : 'max-w-5xl mx-auto px-4 sm:px-6 py-5 sm:py-8'}>
+      {/* Top Game HUD (hidden when wrapped inside Dark Gaming GameplayScreen) */}
+      {!hideHeader && (
+        <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+          <button
+            type="button"
+            onClick={() => {
+              audioService.playClick();
+              onExit();
+            }}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-white border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 transition-colors shadow-xs whitespace-nowrap shrink-0"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            <span>{t.backHome}</span>
+          </button>
 
-        <div className="flex-1 min-w-[200px] max-w-md">
-          <div className="flex items-center justify-between text-xs font-bold text-slate-600 mb-1.5">
-            <span>{t.gameTitles[gameId]}</span>
-            <span className="tabular-nums">
-              {t.questionProgress} {questionIndex + 1} / {totalQuestions}
-            </span>
-          </div>
-          <div className="h-3.5 w-full bg-slate-200 rounded-full overflow-hidden">
-            <div
-              className="h-full rounded-full transition-all duration-300"
-              style={{ width: `${progressPercent}%`, backgroundColor: gameMeta.color }}
-            />
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3 shrink-0">
-          {gameId === 'math_practice' && settings.timerEnabledInPractice && (
-            <div className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 text-sm font-bold tabular-nums">
-              <Clock className="w-4 h-4 text-[#287BFF]" />
-              <span>{elapsedSeconds}{t.secondsShort}</span>
+          <div className="flex-1 min-w-[200px] max-w-md">
+            <div className="flex items-center justify-between text-xs font-bold text-slate-600 mb-1.5">
+              <span>{t.gameTitles[gameId]}</span>
+              <span className="tabular-nums">
+                {t.questionProgress} {questionIndex + 1} / {totalQuestions}
+              </span>
             </div>
-          )}
-          <div className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#FFF8DB] border border-[#FFD83D] text-amber-900 font-bold tabular-nums">
-            <Star className="w-4 h-4 fill-[#FFD83D] text-amber-500" />
-            <span>{correctCount}</span>
+            <div className="h-3.5 w-full bg-slate-200 rounded-full overflow-hidden">
+              <div
+                className="h-full rounded-full transition-all duration-300"
+                style={{ width: `${progressPercent}%`, backgroundColor: gameMeta.color }}
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 shrink-0">
+            {gameId === 'math_practice' && settings.timerEnabledInPractice && (
+              <div className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 text-sm font-bold tabular-nums">
+                <Clock className="w-4 h-4 text-[#287BFF]" />
+                <span>{elapsedSeconds}{t.secondsShort}</span>
+              </div>
+            )}
+            <div className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#FFF8DB] border border-[#FFD83D] text-amber-900 font-bold tabular-nums">
+              <Star className="w-4 h-4 fill-[#FFD83D] text-amber-500" />
+              <span>{correctCount}</span>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Addition Quiz Range Selector (0-5, 0-10, 0-20, 0-100) */}
       {gameId === 'addition_quiz' && (

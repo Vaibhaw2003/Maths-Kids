@@ -6,6 +6,8 @@ class AudioService {
   private soundEnabled = true;
   private musicEnabled = false;
   private voiceEnabled = true;
+  private soundVolume = 0.85;
+  private musicVolume = 0.5;
   private musicStep = 0;
 
   private ensureContext(): AudioContext | null {
@@ -24,9 +26,17 @@ class AudioService {
     return this.ctx;
   }
 
-  public syncSettings(sound: boolean, music: boolean, voice: boolean) {
+  public syncSettings(
+    sound: boolean,
+    music: boolean,
+    voice: boolean,
+    soundVol = 0.85,
+    musicVol = 0.5
+  ) {
     this.soundEnabled = sound;
     this.voiceEnabled = voice;
+    this.soundVolume = Math.max(0, Math.min(1, soundVol));
+    this.musicVolume = Math.max(0, Math.min(1, musicVol));
     if (music !== this.musicEnabled) {
       this.musicEnabled = music;
       if (music) {
@@ -44,10 +54,11 @@ class AudioService {
     gainLevel = 0.14,
     delaySec = 0
   ) {
-    if (!this.soundEnabled) return;
+    if (!this.soundEnabled || this.soundVolume <= 0.01) return;
     const ctx = this.ensureContext();
     if (!ctx) return;
 
+    const scaledGain = Math.max(0.002, gainLevel * this.soundVolume);
     const now = ctx.currentTime + delaySec;
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
@@ -55,7 +66,7 @@ class AudioService {
     osc.frequency.setValueAtTime(freq, now);
 
     gain.gain.setValueAtTime(0.001, now);
-    gain.gain.exponentialRampToValueAtTime(gainLevel, now + 0.02);
+    gain.gain.exponentialRampToValueAtTime(scaledGain, now + 0.02);
     gain.gain.exponentialRampToValueAtTime(0.0001, now + durationSec);
 
     osc.connect(gain);
@@ -92,7 +103,7 @@ class AudioService {
     if (typeof window === 'undefined' || this.musicInterval !== null) return;
     const melody = [261.63, 329.63, 392.0, 329.63, 293.66, 349.23, 392.0, 440.0];
     this.musicInterval = window.setInterval(() => {
-      if (!this.musicEnabled) return;
+      if (!this.musicEnabled || this.musicVolume <= 0.01) return;
       const ctx = this.ensureContext();
       if (!ctx) return;
       const freq = melody[this.musicStep % melody.length];
@@ -103,7 +114,7 @@ class AudioService {
       osc.type = 'sine';
       osc.frequency.setValueAtTime(freq, now);
       gain.gain.setValueAtTime(0.001, now);
-      gain.gain.exponentialRampToValueAtTime(0.03, now + 0.05);
+      gain.gain.exponentialRampToValueAtTime(0.035 * this.musicVolume, now + 0.05);
       gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.48);
       osc.connect(gain);
       gain.connect(ctx.destination);
